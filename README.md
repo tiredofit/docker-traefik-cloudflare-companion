@@ -1,9 +1,9 @@
 # hub.docker.com/tiredofit/traefik-cloudflare-companion
 
-[![Build Status](https://img.shields.io/docker/build/tiredofit/nginx-proxy-cloudflare-companion.svg)](https://hub.docker.com/r/tiredofit/nginx-proxy-cloudflare-companion)
-[![Docker Pulls](https://img.shields.io/docker/pulls/tiredofit/nginx-proxy-cloudflare-companion.svg)](https://hub.docker.com/r/tiredofit/nginx-proxy-cloudflare-companion)
-[![Docker Stars](https://img.shields.io/docker/stars/tiredofit/nginx-proxy-cloudflare-companion.svg)](https://hub.docker.com/r/tiredofit/nginx-proxy-cloudflare-companion)
-[![Docker Layers](https://images.microbadger.com/badges/image/tiredofit/nginx-proxy-cloudflare-companion.svg)](https://microbadger.com/images/tiredofit/nginx-proxy-cloudflare-companion)
+[![Build Status](https://img.shields.io/docker/build/tiredofit/traefik-cloudflare-companion.svg)](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion)
+[![Docker Pulls](https://img.shields.io/docker/pulls/tiredofit/traefik-cloudflare-companion.svg)](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion)
+[![Docker Stars](https://img.shields.io/docker/stars/tiredofit/traefik-cloudflare-companion.svg)](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion)
+[![Docker Layers](https://images.microbadger.com/badges/image/tiredofit/traefik-cloudflare-companion.svg)](https://microbadger.com/images/tiredofit/traefik-cloudflare-companion)
 
 # Introduction
 
@@ -91,5 +91,5 @@ docker exec -it (whatever your container name is e.g. traefik-cloudflare-compani
 # References
 
 * https://www.cloudflare.com
-* https://github.com/tiredofit/docker-nginx-proxy-cloudflare-companion
+* https://github.com/tiredofit/docker-traefik-cloudflare-companion
 * https://github.com/code5-lab/dns-flare
