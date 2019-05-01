@@ -1,0 +1,14 @@
+#!/usr/bin/with-contenv bash
+
+while [ ! -f /tmp/state/10-cloudflare-companion-init ]
+do
+  sleep 1
+done
+
+if [ ! -f /tmp/state/10-cloudflare-companion ]; then
+	echo 'Initialization Complete' > /tmp/state/10-cloudflare-companion
+fi
+
+echo ''
+echo '** [traefik-cloudflare-companion] Starting Traefik Cloudflare Companion'
+exec python -u /usr/sbin/cloudflare-companion

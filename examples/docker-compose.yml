@@ -1,0 +1,15 @@
+version: '2'
+services:
+
+  cloudflare-companion:
+    image: tiredofit/traefik-cloudflare-companion
+    container_name: cloudflare-companion
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - CF_EMAIL=noemail@example.org
+      - CF_TOKEN=1234
+      - TARGET_DOMAIN=host.example.org
+      - DOMAIN1=example.org
+      - DOMAIN1_ZONE_ID=1234567890
+    restart: always
