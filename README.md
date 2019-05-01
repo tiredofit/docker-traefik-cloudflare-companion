@@ -1,4 +1,4 @@
-# hub.docker.com/tiredofit/traefik-cloudflare-companion
+# hub.docker.com/r/tiredofit/traefik-cloudflare-companion
 
 [![Build Status](https://img.shields.io/docker/build/tiredofit/traefik-cloudflare-companion.svg)](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion)
 [![Docker Pulls](https://img.shields.io/docker/pulls/tiredofit/traefik-cloudflare-companion.svg)](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion)
