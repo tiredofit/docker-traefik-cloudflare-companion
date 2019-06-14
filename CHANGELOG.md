@@ -1,3 +1,7 @@
+## 3.1 2019-06-13 Dave Conroy <dave at tiredofit.ca>
+
+* Change to allow multiple Frontend Labels per container
+
 ## 3.0 2019-05-01 Dave Conroy <dave at tiredofit.ca>
 
 * Refactored to Support Traefik from original image tiredofit/nginx-proxy-cloudflare-compaion

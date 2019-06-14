@@ -21,6 +21,7 @@ cat <<EOF > /usr/sbin/cloudflare-companion
 
 #!/usr/bin/python
 import os
+import re
 import docker
 import CloudFlare
 from datetime import datetime
@@ -62,8 +63,8 @@ cat <<EOF >> /usr/sbin/cloudflare-companion
 
 def check_container(c):
     for prop in c.attrs.get(u'Config').get(u'Labels'):
-         if u'traefik.frontend.rule' in prop:
-            value = c.attrs.get(u'Config').get(u'Labels').get(u'traefik.frontend.rule')
+         if re.match('traefik.*.frontend.rule', prop) :
+            value = c.attrs.get(u'Config').get(u'Labels').get(prop)
             if 'Host:' in value:
                 value = value.split("Host:")[1].strip()
                 cont_id = c.attrs.get(u'Id')
