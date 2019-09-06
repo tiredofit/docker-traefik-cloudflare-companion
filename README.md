@@ -1,6 +1,6 @@
 # hub.docker.com/r/tiredofit/traefik-cloudflare-companion
 
-[![Build Status](https://img.shields.io/docker/build/tiredofit/traefik-cloudflare-companion.svg)](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion)
+[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/tiredofit/traefik-cloudflare-companion)](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion)
 [![Docker Pulls](https://img.shields.io/docker/pulls/tiredofit/traefik-cloudflare-companion.svg)](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion)
 [![Docker Stars](https://img.shields.io/docker/stars/tiredofit/traefik-cloudflare-companion.svg)](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion)
 [![Docker Layers](https://images.microbadger.com/badges/image/tiredofit/traefik-cloudflare-companion.svg)](https://microbadger.com/images/tiredofit/traefik-cloudflare-companion)
