@@ -1,20 +1,18 @@
 #!/usr/bin/with-contenv bash
 
+source /assets/functions/*
+PROCESS_NAME="traefik-cloudflare-companion"
+
 ### Sanity Test
-if [ -z ${CF_EMAIL} ] ; then printf "** [traefik-cloudflare-companion] ERROR: CF_EMAIL is not set!\n"; exit 1; fi;
-if [ -z ${CF_TOKEN} ] ; then printf "** [traefik-cloudflare-companion] ERROR: CF_TOKEN is not set!\n"; exit 1; fi;
-if [ -z ${TARGET_DOMAIN} ] ; then printf "** [traefik-cloudflare-companion] ERROR: TARGET_DOMAIN is not set!\n"; exit 1; fi;
-if [ -z ${DOMAIN1} ] ; then printf "** [traefik-cloudflare-companion] ERROR: DOMAIN1 is not set!\n"; exit 1; fi;
-if [ -z ${DOMAIN1_ZONE_ID} ] ; then printf "** [traefik-cloudflare-companion] ERROR: DOMAIN1_ZONE_ID!\n"; exit 1; fi;
+sanity_var CF_EMAIL "Cloudflare Email"
+sanity_var CF_TOKEN "Cloudflare Token"
+sanity_var TARGET_DOMAIN "Target Domain"
+sanity_var DOMAIN1 "Domain 1"
+sanity_var DOMAIN1_ZONE_ID "Domain 1 Zone ID"
 
 ### Set Defaults
 DEFAULT_TTL=${DEFAULT_TTL:-120}
 DOCKER_ENDPOINT=${DOCKET_ENDPOINT:-"unix://var/run/docker.sock"}
-
-### Set Debug Mode
-if [ "$DEBUG_MODE" = "TRUE" ] || [ "$DEBUG_MODE" = "true" ]; then
-    set -x
-fi
 
 ### Create the Script
 cat <<EOF > /usr/sbin/cloudflare-companion
@@ -105,5 +103,4 @@ EOF
 
 chmod +x /usr/sbin/cloudflare-companion
 
-mkdir -p /tmp/state
-touch /tmp/state/10-cloudflare-companion-init
+liftoff

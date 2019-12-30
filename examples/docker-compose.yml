@@ -1,4 +1,4 @@
-version: '2'
+version: '3.7'
 services:
 
   cloudflare-companion:
@@ -11,5 +11,14 @@ services:
       - CF_TOKEN=1234
       - TARGET_DOMAIN=host.example.org
       - DOMAIN1=example.org
-      - DOMAIN1_ZONE_ID=1234567890
+      - DOMAIN2_ZONE_ID=1234567890
+    networks:
+    - internal
+    - services
     restart: always
+
+networks:
+  internal:
+    external: false
+  services:
+    external: true

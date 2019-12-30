@@ -1,3 +1,9 @@
+## 3.2.0 2019-12-29 <dave at tiredofit dot ca>
+
+   ### Added
+      - Update Image to support new tiredofit/alpine base image
+
+
 ## 3.1 2019-06-13 Dave Conroy <dave at tiredofit.ca>
 
 * Change to allow multiple Frontend Labels per container
