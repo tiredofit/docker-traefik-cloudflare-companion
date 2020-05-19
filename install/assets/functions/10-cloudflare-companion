@@ -1,0 +1,6 @@
+#!/usr/bin/with-contenv bash
+
+### Set Defaults
+DEFAULT_TTL=${DEFAULT_TTL:-1}
+DOCKER_ENDPOINT=${DOCKET_ENDPOINT:-"unix://var/run/docker.sock"}
+TRAEFIK_VERSION=${TRAEFIK_VERSION:-1}

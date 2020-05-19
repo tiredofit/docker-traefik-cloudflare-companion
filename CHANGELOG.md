@@ -1,3 +1,8 @@
+## 4.0.0 2020-04-23 <dave at tiredofit dot ca>
+
+   ### Added
+      - Support Traefik v2
+
 ## 3.2.1 2020-01-02 <dave at tiredofit dot ca>
 
    ### Changed

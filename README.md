@@ -43,7 +43,7 @@ Automated builds of the image are available on [Docker Hub](https://hub.docker.c
 ```bash
 docker pull tiredofit/traefik-cloudflare-companion:(imagetag)
 ```
-* `latest` - Most recent release w/Python 2 and Alpine 3.9
+* `latest` - Most recent release w/Python 2 and Alpine 3.11
 
 # Quick Start
 
@@ -65,10 +65,11 @@ Along with the Environment Variables from the [Base image](https://hub.docker.co
 
 | Parameter | Description |
 |-----------|-------------|
+| `TRAEFIK_VERSION` | What version of Traefik do you want to work against - `1` or `2` - Default `1` |
 | `DOCKER_ENTRYPOINT` | Docker Entrypoint default `unix://var/run/docker.sock` |
-| `CF_EMAIL` | Your Cloudflare Email Address |
+| `CF_EMAIL` | Email address tied to Cloudflare Account |
 | `CF_TOKEN` | Token for the Domain |
-| `DEFAULT_TTL` | TTL to apply to records - Default `120` |
+| `DEFAULT_TTL` | TTL to apply to records - Default `1` (auto) |
 | `TARGET_DOMAIN` | Destination Host to forward records to e.g. ``host.example.com` |
 | `DOMAIN1`   | Domain 1 you wish to update records for. |
 | `DOMAIN1_ZONE_ID`   | Domain 1 Zone ID from Cloudflare |

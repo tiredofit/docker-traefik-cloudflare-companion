@@ -10,10 +10,6 @@ sanity_var TARGET_DOMAIN "Target Domain"
 sanity_var DOMAIN1 "Domain 1"
 sanity_var DOMAIN1_ZONE_ID "Domain 1 Zone ID"
 
-### Set Defaults
-DEFAULT_TTL=${DEFAULT_TTL:-120}
-DOCKER_ENDPOINT=${DOCKET_ENDPOINT:-"unix://var/run/docker.sock"}
-
 ### Create the Script
 cat <<EOF > /usr/sbin/cloudflare-companion
 
@@ -54,10 +50,37 @@ EOF
         done
 
 ### Finish rest of script
-cat <<EOF >> /usr/sbin/cloudflare-companion
+if [ "${TRAEFIK_VERSION}" = "2" ] ; then
+    print_notice "Setting Traefik 2.x Mode"
+    cat <<EOF >> /usr/sbin/cloudflare-companion
     except CloudFlare.exceptions.CloudFlareAPIError as e:
         print '** %s - %d %s' % (name, e, e)
 
+def check_container(c):
+    for prop in c.attrs.get(u'Config').get(u'Labels'):
+         if re.match('traefik.*?\.rule', prop) :
+            value = c.attrs.get(u'Config').get(u'Labels').get(prop)
+            if 'Host' in value:
+                print "container rule value: ", value
+                extracted_domains = re.findall(r'Host\(\`(.*?)\`\)', value)
+                print "extracted_domains from rule: ", extracted_domains
+                cont_id = c.attrs.get(u'Id')
+                if len(extracted_domains) > 1:
+                    for v in extracted_domains:
+                        print "Found Container:",cont_id,"with Multi-Hostname",v 
+                        point_domain(v)
+                elif len(extracted_domains) == 1:
+                    print "Found Container:",cont_id,"with Hostname", extracted_domains[0]
+                    point_domain(extracted_domains[0])
+            else:
+                pass
+
+EOF
+else
+    print_notice "Setting Traefik 1.x Mode"    
+    cat <<EOF >> /usr/sbin/cloudflare-companion
+    except CloudFlare.exceptions.CloudFlareAPIError as e:
+        print '** %s - %d %s' % (name, e, e)
 
 def check_container(c):
     for prop in c.attrs.get(u'Config').get(u'Labels'):
@@ -76,7 +99,10 @@ def check_container(c):
             else:
                 pass
 
+EOF
+fi
 
+cat <<EOF >> /usr/sbin/cloudflare-companion
 def init():
     for c in client.containers.list(all=True):
         check_container(c)
@@ -86,7 +112,7 @@ token = os.environ['CF_TOKEN']
 target_domain = os.environ['TARGET_DOMAIN']
 domain = os.environ['DOMAIN1']
 
-cf = CloudFlare.CloudFlare(email=email, token=token)
+cf = CloudFlare.CloudFlare(email=email , token=token)
 client = docker.DockerClient(base_url='${DOCKER_ENDPOINT}')
 
 init()
