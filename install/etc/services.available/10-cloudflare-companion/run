@@ -1,6 +1,6 @@
 #!/usr/bin/with-contenv bash
 
-for s in /assets/functions/*; do source $s; done
+source /assets/functions/00-container
 PROCESS_NAME="traefik-cloudflare-companion"
 
 check_container_initialized

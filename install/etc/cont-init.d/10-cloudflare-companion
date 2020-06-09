@@ -1,6 +1,7 @@
 #!/usr/bin/with-contenv bash
 
-for s in /assets/functions/*; do source $s; done
+source /assets/functions/00-container
+prepare_service single
 PROCESS_NAME="traefik-cloudflare-companion"
 
 ### Sanity Test
