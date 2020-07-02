@@ -1,3 +1,10 @@
+## 4.2.0 2020-07-02 <dave at tiredofit dot ca>
+
+   ### Added
+      - Support HostSNI entries
+      - Alpine 3.12 base
+
+
 ## 4.1.0 2020-06-09 <dave at tiredofit dot ca>
 
    ### Added

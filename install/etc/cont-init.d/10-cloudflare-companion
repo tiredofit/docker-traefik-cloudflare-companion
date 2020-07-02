@@ -26,8 +26,8 @@ def point_domain(name):
 EOF
 
 ### Loop through DOMAIN* Variables
-    NUM=`printenv | sort | grep '\DOMAIN.*' | wc -l`
-    for (( i = 1; i <= $NUM; i++ ))
+    NUM=$(printenv | sort | grep -c '\DOMAIN.*')
+    for (( i = 1; i <= NUM; i++ ))
         do
         domain_tmp=DOMAIN${i}
         if [ "${!domain_tmp}" != "" ] ; then
@@ -63,12 +63,12 @@ def check_container(c):
             value = c.attrs.get(u'Config').get(u'Labels').get(prop)
             if 'Host' in value:
                 print "container rule value: ", value
-                extracted_domains = re.findall(r'Host\(\`(.*?)\`\)', value)
+                extracted_domains = re.findall(r'Host.*\(\`(.*?)\`\)', value)
                 print "extracted_domains from rule: ", extracted_domains
                 cont_id = c.attrs.get(u'Id')
                 if len(extracted_domains) > 1:
                     for v in extracted_domains:
-                        print "Found Container:",cont_id,"with Multi-Hostname",v 
+                        print "Found Container:",cont_id,"with Multi-Hostname",v
                         point_domain(v)
                 elif len(extracted_domains) == 1:
                     print "Found Container:",cont_id,"with Hostname", extracted_domains[0]
@@ -78,7 +78,7 @@ def check_container(c):
 
 EOF
 else
-    print_notice "Setting Traefik 1.x Mode"    
+    print_notice "Setting Traefik 1.x Mode"
     cat <<EOF >> /usr/sbin/cloudflare-companion
     except CloudFlare.exceptions.CloudFlareAPIError as e:
         print '** %s - %d %s' % (name, e, e)
@@ -92,10 +92,10 @@ def check_container(c):
                 cont_id = c.attrs.get(u'Id')
                 if ',' in value:
                     for v in value.split(","):
-                        print "Found Container:",cont_id,"with Multi-Hostname",v 
+                        print "Found Container:",cont_id,"with Multi-Hostname",v
                         point_domain(v)
                 else:
-                    print "Found Container:",cont_id,"with Hostname", value 
+                    print "Found Container:",cont_id,"with Hostname", value
                     point_domain(value)
             else:
                 pass

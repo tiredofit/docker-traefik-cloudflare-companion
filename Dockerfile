@@ -1,4 +1,4 @@
-FROM tiredofit/alpine:3.11
+FROM tiredofit/alpine:3.12
 LABEL maintainer="Dave Conroy (dave at tiredofit dot ca)"
 
 ### Set Environment Variables
@@ -8,11 +8,12 @@ ENV ENABLE_CRON=false \
 ### Dependencies
 RUN set -x && \
     apk update && \
+    apk upgrade && \
     apk add \
         python2 \
-        py2-pip \
         && \
     \
+    curl https://bootstrap.pypa.io/get-pip.py | python - && \
     pip install \
             cloudflare \
             docker \
