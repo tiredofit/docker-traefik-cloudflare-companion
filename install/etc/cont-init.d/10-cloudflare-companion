@@ -114,7 +114,7 @@ target_domain = os.environ['TARGET_DOMAIN']
 domain = os.environ['DOMAIN1']
 
 cf = CloudFlare.CloudFlare(email=email , token=token)
-client = docker.DockerClient(base_url='${DOCKER_ENDPOINT}')
+client = docker.from_env()
 
 init()
 
