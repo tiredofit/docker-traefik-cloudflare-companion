@@ -10,13 +10,18 @@ RUN set -x && \
     apk update && \
     apk upgrade && \
     apk add \
-        python2 \
-        && \
+    python2 \
+    python2-dev \
+    gcc \
+    musl-dev \
+    libffi-dev \
+    openssl-dev \
+    && \
     \
     curl https://bootstrap.pypa.io/get-pip.py | python - && \
     pip install \
             cloudflare \
-            docker \
+            docker[tls] \
             && \
     \
 ### Cleanup
