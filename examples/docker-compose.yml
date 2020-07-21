@@ -13,6 +13,9 @@ services:
       - TARGET_DOMAIN=host.example.org
       - DOMAIN1=example.org
       - DOMAIN1_ZONE_ID=1234567890
+      #- DOCKER_HOST=tcp://198.51.100.32:2376
+      #- DOCKER_CERT_PATH=/docker-certs
+      #- DOCKER_TLS_VERIFY=1
     networks:
     - internal
     - services
