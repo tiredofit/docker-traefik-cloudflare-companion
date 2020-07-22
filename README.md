@@ -69,10 +69,10 @@ Along with the Environment Variables from the [Base image](https://hub.docker.co
 | ------------------- | ------------------------------------------------------------------------------ |
 | `TRAEFIK_VERSION`   | What version of Traefik do you want to work against - `1` or `2` - Default `1` |
 | `DOCKER_ENTRYPOINT` | Docker Entrypoint default `unix://var/run/docker.sock`                         |
-| `CF_EMAIL`          | Email address tied to Cloudflare Account                                       |
-| `CF_TOKEN`          | Token for the Domain                                                           |
+| `CF_API_EMAIL`      | Email address tied to Cloudflare Account for usage with the Global API key     |
+| `CF_API_KEY`        | Global API Key or API Token if used without email address                      |
 | `DEFAULT_TTL`       | TTL to apply to records - Default `1` (auto)                                   |
-| `TARGET_DOMAIN`     | Destination Host to forward records to e.g. `host.example.com`                |
+| `TARGET_DOMAIN`     | Destination Host to forward records to e.g. `host.example.com`                 |
 | `DOMAIN1`           | Domain 1 you wish to update records for.                                       |
 | `DOMAIN1_ZONE_ID`   | Domain 1 Zone ID from Cloudflare                                               |
 | `DOMAIN1_PROXIED`   | Domain 1 True of False if proxied                                              |
