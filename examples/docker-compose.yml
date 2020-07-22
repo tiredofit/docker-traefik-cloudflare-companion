@@ -8,11 +8,10 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - TRAEFIK_VERSION=2
-      - CF_EMAIL=email@example.com
-      - CF_TOKEN=1234
+      - CF_API_KEY=5uaY5WTNEGXB7xXsvz2jVA2wVsCKTgGp
       - TARGET_DOMAIN=host.example.org
       - DOMAIN1=example.org
-      - DOMAIN1_ZONE_ID=1234567890
+      - DOMAIN1_ZONE_ID=fbSx3dk3A3mJ6UukLQ7zRbo63H5UdsGSCqQnTvbJDgyQaTp
       #- DOCKER_HOST=tcp://198.51.100.32:2376
       #- DOCKER_CERT_PATH=/docker-certs
       #- DOCKER_TLS_VERIFY=1
