@@ -63,7 +63,7 @@ def check_container(c):
             value = c.attrs.get(u'Config').get(u'Labels').get(prop)
             if 'Host' in value:
                 print "container rule value: ", value
-                extracted_domains = re.findall(r'Host.*\(\`(.*?)\`\)', value)
+                extracted_domains = re.findall(r'Host.*?\(\`(.*?)\`\)', value)
                 print "extracted_domains from rule: ", extracted_domains
                 cont_id = c.attrs.get(u'Id')
                 if len(extracted_domains) > 1:
