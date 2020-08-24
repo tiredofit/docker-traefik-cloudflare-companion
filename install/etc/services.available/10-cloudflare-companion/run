@@ -8,4 +8,4 @@ check_service_initialized init
 liftoff
 
 print_info "Starting Traefik Cloudflare Companion"
-exec python -u /usr/sbin/cloudflare-companion
+exec python3 -u /usr/sbin/cloudflare-companion

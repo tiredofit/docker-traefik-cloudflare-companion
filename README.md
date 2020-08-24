@@ -29,6 +29,7 @@ Dockerfile to build a Container to automatically update Cloudflare DNS records u
 - [Configuration](#configuration)
   - [Volumes](#volumes)
   - [Environment Variables](#environment-variables)
+  - [Docker Secrets](#docker-secrets)
 - [Maintenance](#maintenance)
   - [Shell Access](#shell-access)
 - [References](#references)
@@ -45,7 +46,7 @@ Automated builds of the image are available on [Docker Hub](https://hub.docker.c
 ```bash
 docker pull tiredofit/traefik-cloudflare-companion:(imagetag)
 ```
-* `latest` - Most recent release w/Python 2 and Alpine 3.12
+* `latest` - Most recent release w/Python 3 and Alpine 3.12
 
 ### Quick Start
 
@@ -81,25 +82,26 @@ Along with the Environment Variables from the [Base image](https://hub.docker.co
 | ------------------- | --------------------------------------------------------------------------------------- | ---------------------------- |
 | `TRAEFIK_VERSION`   | What version of Traefik do you want to work against - `1` or `2`                        | `2`                          |
 | `DOCKER_ENTRYPOINT` | Docker Entrypoint default (local mode)                                                  | `unix://var/run/docker.sock` |
-| `DOCKER_HOST`       | (optional) If using tcp connection e.g. `tcp://198.51.100.32:2376`                      |                              |
+| `DOCKER_HOST`       | (optional) If using tcp connection e.g. `tcp://111.222.111.32:2376`                     |                              |
 | `DOCKER_CERT_PATH`  | (optional) If using tcp connection with TLS - Certificate location e.g. `/docker-certs` |                              |
 | `DOCKER_TLS_VERIFY` | (optional) If using tcp conneciton to socket Verify TLS                                 | `1`                          |
 | `REFRESH_ENTRIES`   | If record exists, update entry with new values `TRUE` or `FALSE`                        | `TRUE`                       |
 | `SWARM_MODE`        | Enable Docker Swarm Mode `TRUE` or `FALSE`                                              | `FALSE`                      |
-| `API_MODE`          | Use Cloudflare `GLOBAL` API token or `SCOPED` API Token                                 | `GLOBAL` |
-| `CF_EMAIL`          | (API_MODE=GLOBAL) Email address tied to Cloudflare Account                                                |                              |
-| `CF_TOKEN`          | (API_MODE=GLOBAL) Global API Token for the Domain                                                                    |                              |
-| `CF_API_KEY`        | (API_MODE=SCOPED) Scoped API Token |
+| `CF_EMAIL`          | Email address tied to Cloudflare Account - Leave Blank or `None`for Scoped API          |                              |
+| `CF_TOKEN`          | API Token for the Domain                                                                |                              |
 | `DEFAULT_TTL`       | TTL to apply to records                                                                 | `1`                          |
 | `TARGET_DOMAIN`     | Destination Host to forward records to e.g. `host.example.com`                          |                              |
 | `DOMAIN1`           | Domain 1 you wish to update records for.                                                |                              |
 | `DOMAIN1_ZONE_ID`   | Domain 1 Zone ID from Cloudflare                                                        |                              |
-| `DOMAIN1_PROXIED`   | Domain 1 True of False if proxied                                                       |                              |
+| `DOMAIN1_PROXIED`   | Domain 1 True or False if proxied                                                       |                              |
 | `DOMAIN2`           | (optional Domain 2 you wish to update records for.                                      |                              |
 | `DOMAIN2_ZONE_ID`   | Domain 2 Zone ID from Cloudflare                                                        |                              |
-| `DOMAIN2_PROXIED`   | Domain 1 True of False if proxied                                                       |                              |
+| `DOMAIN2_PROXIED`   | Domain 1 True or False if proxied                                                       |                              |
 | `DOMAIN3....`       | And so on..                                                                             |                              |
 
+### Docker Secrets
+
+`CF_EMAIL` and `CF_TOKEN` support Docker Secrets
 
 ## Maintenance
 ### Shell Access

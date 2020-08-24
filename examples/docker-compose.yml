@@ -8,12 +8,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - TRAEFIK_VERSION=2
-      ### Choose from either GLOBAL or Scoped
-      - API_MODE=GLOBAL
       - CF_EMAIL=email@example.com
       - CF_TOKEN=fbSx3dk3A3mJ6UukLQ7zRbo63H5UdsGSCqQnTvbJDgyQaTp
-      #- API_MODE=SCOPED
-      #- CF_API_TOKEN=scopedapitoken
 
       - TARGET_DOMAIN=host.example.org
       - DOMAIN1=example.org

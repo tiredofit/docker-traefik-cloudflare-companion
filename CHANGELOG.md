@@ -1,3 +1,14 @@
+## 6.0.0 2020-08-24 <dave at tiredofit dot ca>
+
+   ### Added
+      - Pure Python3 implementation
+      - Support more than 10 Domains
+      - Debug Mode - Set CONTAINER_LOG_LEVEL=DEBUG to see whats going wrong and a tonne of verbosity
+   
+   ### Changed
+      - TRAEFIK_VERSION set to `2` by default
+
+
 ## 5.0.0 2020-08-21 <dave at tiredofit dot ca>
 
    ### Added

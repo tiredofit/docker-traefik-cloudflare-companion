@@ -1,0 +1,210 @@
+#!/usr/bin/python3
+
+from __future__ import print_function
+import os
+import re
+import docker
+from get_docker_secret import get_docker_secret
+import CloudFlare
+from datetime import datetime
+
+DEFAULT_TTL = os.environ.get('DEFAULT_TTL', "1")
+SWARM_MODE = os.environ.get('SWARM_MODE', "FALSE")
+REFRESH_ENTRIES = os.environ.get('REFRESH_ENTRIES', False )
+TRAEFIK_VERSION = os.environ.get('TRAEFIK_VERSION', "2")
+CONTAINER_LOG_LEVEL = os.environ.get('CONTAINER_LOG_LEVEL', "INFO")
+
+def init_doms_from_env():
+    RX_DOMS = re.compile('^DOMAIN[0-9]+$', re.IGNORECASE)
+
+    doms = list()
+    for k in os.environ:
+        if not RX_DOMS.match(k):
+            continue
+
+        name = os.environ[k]
+        try:
+            dom = {
+                'name': name,
+                'proxied': os.environ.get("{}_PROXIED".format(k), "FALSE").upper() == "TRUE",
+                'zone_id': os.environ["{}_ZONE_ID".format(k)],
+                'ttl': os.environ.get("{}_TTL".format(k), DEFAULT_TTL),
+            }
+
+            doms.append(dom)
+
+        except KeyError as e:
+            print("*** ERROR: {} is not set!".format(e))
+
+    return doms
+
+
+def point_domain(name, doms):
+    for dom in doms:
+        if name.find(dom['name']) >= 0:
+            records = cf.zones.dns_records.get(dom['zone_id'], params={u'name':name})
+            data = {
+                u'type': u'CNAME',
+                u'name': name,
+                u'content': target_domain,
+                u'ttl': dom['ttl'],
+                u'proxied': dom['proxied']
+            }
+            if REFRESH_ENTRIES == "TRUE" :
+                try:
+                    if len(records) == 0:
+                        r = cf.zones.dns_records.post(dom['zone_id'], data=data)
+                        print ("Created new record:", name, "to point to", target_domain)
+                    else:
+                        for record in records:
+                            cf.zones.dns_records.put(dom['zone_id'], record["id"], data=data)
+                            print ("Updated existing record:", name, "to point to", target_domain)
+                except CloudFlare.exceptions.CloudFlareAPIError as e:
+                    pass
+            else:
+                try:
+                    r = cf.zones.dns_records.post(dom['zone_id'], data=data)
+                    print ("Created new record:", name, "to point to", target_domain)
+
+                except CloudFlare.exceptions.CloudFlareAPIError as e:
+                    print('** %s - %d %s' % (name, e, e))
+
+
+def check_container_t1(c, doms):
+    for prop in c.attrs.get(u'Config').get(u'Labels'):
+         if re.match('traefik.*.frontend.rule', prop) :
+            value= c.attrs.get(u'Config').get(u'Labels').get(prop)
+            if 'Host' in value:
+                value = value.split("Host:")[1].strip()
+                if CONTAINER_LOG_LEVEL == "DEBUG" :
+                    print ("[debug] Container rule value:", value)
+                cont_id= c.attrs.get(u'Id')
+                if ',' in value:
+                    for v in value.split(","):
+                        print ("Found Container:",cont_id,"with Multi-Hostname",v)
+                        point_domain(v, doms)
+                else:
+                    print ("Found Container:",cont_id,"with Hostname", value)
+                    point_domain(value, doms)
+            else:
+                pass
+
+
+def check_service_t1(s, doms):
+    for prop in c.attrs.get(u'Spec').get(u'Labels'):
+         if re.match('traefik.*.frontend.rule', prop) :
+            value= c.attrs.get(u'Config').get(u'Labels').get(prop)
+            if 'Host' in value:
+                value = value.split("Host:")[1].strip()
+                if CONTAINER_LOG_LEVEL == "DEBUG" :
+                    print ("[debug] Swarm Container rule value:", value)
+                cont_id= c.attrs.get(u'Id')
+                if ',' in value:
+                    for v in value.split(","):
+                        print ("Found Swarm Container:",cont_id,"with Multi-Hostname",v)
+                        point_domain(v, doms)
+                else:
+                    print ("Found Swarm Container:",cont_id,"with Hostname", value)
+                    point_domain(value, doms)
+            else:
+                pass
+
+
+def check_container_t2(c, doms):
+    for prop in c.attrs.get(u'Config').get(u'Labels'):
+         if re.match('traefik.*?\.rule', prop):
+            value= c.attrs.get(u'Config').get(u'Labels').get(prop)
+            if 'Host' in value:
+                if CONTAINER_LOG_LEVEL == "DEBUG" :
+                    print ("[debug] Container rule value:", value)
+                extracted_domains= re.findall(r'Host.*?\(`(.*?)`\)', value)
+                if CONTAINER_LOG_LEVEL == "DEBUG" :
+                    print ("[debug] Extracted_domains from rule:", extracted_domains)
+                cont_id= c.attrs.get(u'Id')
+                if len(extracted_domains) > 1:
+                    for v in extracted_domains:
+                        print ("Found Container:", cont_id, "with Multi-Hostname", v)
+                        point_domain(v, doms)
+                elif len(extracted_domains) == 1:
+                    print ("Found Container:", cont_id, "with Hostname", extracted_domains[0])
+                    point_domain(extracted_domains[0], doms)
+            else:
+                pass
+
+
+def check_service_t2(s, doms):
+    for prop in s.attrs.get(u'Spec').get(u'Labels'):
+         if re.match('traefik.*?\.rule', prop):
+            value= s.attrs.get(u'Spec').get(u'Labels').get(prop)
+            if 'Host' in value:
+                if CONTAINER_LOG_LEVEL == "DEBUG" :
+                    print ("Swarm Container: rule value:", value)
+                extracted_domains= re.findall(r'Host.*?\(`(.*?)`\)', value)
+                if CONTAINER_LOG_LEVEL == "DEBUG" :
+                    print ("Swarm Container: extracted_domains from rule:", extracted_domains)
+                service_id= s.attrs.get(u'Id')
+                if len(extracted_domains) > 1:
+                    for v in extracted_domains:
+                        print ("Found Swarm Container:", service_id, "with Multi-Hostname", v)
+                        point_domain(v, doms)
+                elif len(extracted_domains) == 1:
+                    print ("Found Swarm Container:", service_id, "with Hostname", extracted_domains[0])
+                    point_domain(extracted_domains[0], doms)
+            else:
+                pass
+
+
+def init(doms):
+    for c in client.containers.list(all=True):
+        if TRAEFIK_VERSION == "1" :
+            check_container_t1(c, doms)
+        elif TRAEFIK_VERSION == "2" :
+            check_container_t2(c, doms)
+
+    if SWARM_MODE is True :
+        for s in client.services.list():
+            if TRAEFIK_VERSION == "1" :
+                check_service_t1(s, doms)
+            elif TRAEFIK_VERSION == "2" :
+                check_service_t2(s, doms)
+
+try:
+    # Set Email to 'None' if using token instead of API Key
+    email = get_docker_secret('CF_EMAIL', autocast_name=False, getenv=True, default='None')
+    token = get_docker_secret('CF_TOKEN', autocast_name=False, getenv=True)
+    target_domain= os.environ['TARGET_DOMAIN']
+    domain= os.environ['DOMAIN1']
+
+except KeyError as e:
+    exit("ERROR: {} not defined".format(e))
+
+if CONTAINER_LOG_LEVEL == "DEBUG" :
+    print ("[debug] Swarm Mode:", SWARM_MODE)
+    print ("[debug] Refresh Entries:", REFRESH_ENTRIES)
+    print ("[debug] Traefik Version:", TRAEFIK_VERSION)
+    print ("[debug] Default TTL:", DEFAULT_TTL)
+    cf = CloudFlare.CloudFlare(debug=True, email=email, token=token)
+else :
+    cf = CloudFlare.CloudFlare(email=email, token=token)
+
+client= docker.from_env()
+doms= init_doms_from_env()
+
+init(doms)
+
+t= datetime.now().time().strftime("%s")
+
+for event in client.events(since=t, filters={'status': u'start'}, decode=True):
+    if event.get(u'status') == u'start':
+        try:
+            if TRAEFIK_VERSION == "1" :
+                check_container_t1(client.containers.get(event.get(u'id')), doms)
+                if SWARM_MODE == "TRUE" :
+                    check_container_t1(client.services.get(event.get(u'id')), doms)
+            elif TRAEFIK_VERSION == "2" :
+                check_container_t2(client.containers.get(event.get(u'id')), doms)
+                if SWARM_MODE == "TRUE" :
+                    check_container_t2(client.services.get(event.get(u'id')), doms)
+
+        except docker.errors.NotFound as e:
+            pass
