@@ -1,3 +1,12 @@
+## 5.0.0 2020-08-21 <dave at tiredofit dot ca>
+
+   ### Added
+      - Support global or scoped API mode (API_MODE=GLOBAL/SCOPED) (inital credit: blinkiz@github)
+      - Support Refreshing Entries (inital credit: dchidell@github)
+      - Support Docker Swarm Mode
+      - Support Docker Secrets
+
+
 ## 4.2.1 2020-08-05 <dave at tiredofit dot ca>
 
    ### Changed
