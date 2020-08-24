@@ -45,7 +45,7 @@ Automated builds of the image are available on [Docker Hub](https://hub.docker.c
 ```bash
 docker pull tiredofit/traefik-cloudflare-companion:(imagetag)
 ```
-* `latest` - Most recent release w/Python 2 and Alpine 3.11
+* `latest` - Most recent release w/Python 2 and Alpine 3.12
 
 ### Quick Start
 
@@ -54,6 +54,18 @@ docker pull tiredofit/traefik-cloudflare-companion:(imagetag)
 * Set various [environment variables](#environment-variables) to understand the capabilities of this image.
 
 Upon startup the image looks for a label containing `traefik.frontend.rule` (version 1) or `Host*` (version2) from your running containers of either updates Cloudflare with a CNAME record of your `TARGET_DOMAIN`. Previous versions of this container used to only update one Zone, however with the additional of the `DOMAIN` environment variables it now parses the containers variables and updates the appropriate zone.
+
+For those wishing to assign multiple CNAMEs to a container use the following format:
+
+- Traefik 1.x
+````bash
+  - traefik.normal.frontend.rule=Host:example1.domain.tld,example2.domain.tld
+````
+
+- Traefik 2.x
+````bash
+  - traefik.http.routers.example.rule=Host(`example1.domain.tld`) || Host(`example2.domain.tld`)
+````
 
 ## Configuration
 ### Volumes
@@ -64,6 +76,7 @@ Upon startup the image looks for a label containing `traefik.frontend.rule` (ver
 ### Environment Variables
 
 Along with the Environment Variables from the [Base image](https://hub.docker.com/r/tiredofit/alpine), below is the complete list of available options that can be used to customize your installation. By Default Cron and SMTP are disabled.
+
 
 | Parameter           | Description                                                                    |
 | ------------------- | ------------------------------------------------------------------------------ |
@@ -80,6 +93,8 @@ Along with the Environment Variables from the [Base image](https://hub.docker.co
 | `DOMAIN2_ZONE_ID`   | Domain 2 Zone ID from Cloudflare                                               |
 | `DOMAIN2_PROXIED`   | Domain 1 True of False if proxied                                              |
 | `DOMAIN3....`       | And so on..                                                                    |
+
+
 
 
 ## Maintenance

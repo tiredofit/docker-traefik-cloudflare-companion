@@ -1,3 +1,9 @@
+## 4.2.1 2020-08-05 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Fix multi hostname rule values for Traefik 2
+
+
 ## 4.2.0 2020-07-02 <dave at tiredofit dot ca>
 
    ### Added
