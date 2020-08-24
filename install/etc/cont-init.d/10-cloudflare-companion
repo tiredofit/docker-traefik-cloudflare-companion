@@ -44,7 +44,24 @@ EOF
                 proxied_flag${i} = False
 
             if name.find(domain${i}) != -1:
-                r = cf.zones.dns_records.post(zone_id${i},data={u'type': u'CNAME', u'name': name, u'content': target_domain, u'ttl': ${DEFAULT_TTL}, u'proxied': proxied_flag${i}} )
+                try:
+                    records = cf.zones.dns_records.get(zone_id${i}, params={u'name':name})
+                    data_dict = {
+                        u'type': u'CNAME', 
+                        u'name': name, 
+                        u'content': target_domain, 
+                        u'ttl': ${DEFAULT_TTL}, 
+                        u'proxied': proxied_flag${i}
+                    }
+                    if len(records) == 0:
+                        cf.zones.dns_records.post(zone_id${i},data=data_dict)
+                        print "Created new record: ", name
+                    else:
+                        for record in records:
+                            cf.zones.dns_records.put(zone_id${i}, record["id"], data=data_dict)
+                            print "Updated existing record: ", name
+                except CloudFlare.exceptions.CloudFlareAPIError as e:
+                    pass
 
 EOF
         fi
