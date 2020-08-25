@@ -1,3 +1,9 @@
+## 6.0.1 2020-08-25 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Fix for calling right function when Swarm activated
+
+
 ## 6.0.0 2020-08-24 <dave at tiredofit dot ca>
 
    ### Added

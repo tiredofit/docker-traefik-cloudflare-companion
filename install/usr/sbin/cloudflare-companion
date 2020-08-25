@@ -200,11 +200,11 @@ for event in client.events(since=t, filters={'status': u'start'}, decode=True):
             if TRAEFIK_VERSION == "1" :
                 check_container_t1(client.containers.get(event.get(u'id')), doms)
                 if SWARM_MODE == "TRUE" :
-                    check_container_t1(client.services.get(event.get(u'id')), doms)
+                    check_service_t1(client.services.get(event.get(u'id')), doms)
             elif TRAEFIK_VERSION == "2" :
                 check_container_t2(client.containers.get(event.get(u'id')), doms)
                 if SWARM_MODE == "TRUE" :
-                    check_container_t2(client.services.get(event.get(u'id')), doms)
+                    check_service_t2(client.services.get(event.get(u'id')), doms)
 
         except docker.errors.NotFound as e:
             pass
