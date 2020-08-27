@@ -170,11 +170,10 @@ def init(doms):
 
 try:
     # Set Email to 'None' if using token instead of API Key
-    email = get_docker_secret('CF_EMAIL', autocast_name=False, getenv=True, default='None')
+    email = get_docker_secret('CF_EMAIL', autocast_name=False, getenv=True)
     token = get_docker_secret('CF_TOKEN', autocast_name=False, getenv=True)
     target_domain= os.environ['TARGET_DOMAIN']
     domain= os.environ['DOMAIN1']
-
 except KeyError as e:
     exit("ERROR: {} not defined".format(e))
 
@@ -183,9 +182,17 @@ if CONTAINER_LOG_LEVEL == "DEBUG" :
     print ("[debug] Refresh Entries:", REFRESH_ENTRIES)
     print ("[debug] Traefik Version:", TRAEFIK_VERSION)
     print ("[debug] Default TTL:", DEFAULT_TTL)
-    cf = CloudFlare.CloudFlare(debug=True, email=email, token=token)
+    if not email :
+          print ("[debug] API Mode: Scoped")
+          cf = CloudFlare.CloudFlare(debug=True, token=token)
+    else:
+          print ("[debug] API Mode: Global")
+          cf = CloudFlare.CloudFlare(debug=True, email=email, token=token)
 else :
-    cf = CloudFlare.CloudFlare(email=email, token=token)
+    if not email :
+          cf = CloudFlare.CloudFlare(token=token)
+    else:
+          cf = CloudFlare.CloudFlare(email=email, token=token)
 
 client= docker.from_env()
 doms= init_doms_from_env()

@@ -1,3 +1,9 @@
+## 6.0.2 2020-08-27 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Fix for Scoped Tokens sendind "None" as email
+
+
 ## 6.0.1 2020-08-25 <dave at tiredofit dot ca>
 
    ### Changed
@@ -10,7 +16,7 @@
       - Pure Python3 implementation
       - Support more than 10 Domains
       - Debug Mode - Set CONTAINER_LOG_LEVEL=DEBUG to see whats going wrong and a tonne of verbosity
-   
+
    ### Changed
       - TRAEFIK_VERSION set to `2` by default
 
