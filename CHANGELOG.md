@@ -1,3 +1,8 @@
+## 6.1.1 2020-08-29 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Case Insensitivity environment variables fix
+
 ## 6.1.0 2020-08-28 <dave at tiredofit dot ca>
 
    ### Added

@@ -51,7 +51,7 @@ def point_domain(name, doms):
                 u'ttl': dom['ttl'],
                 u'proxied': dom['proxied']
             }
-            if REFRESH_ENTRIES is True :
+            if REFRESH_ENTRIES :
                 try:
                     if len(records) == 0:
                         r = cf.zones.dns_records.post(dom['zone_id'], data=data)
@@ -210,9 +210,13 @@ if CONTAINER_LOG_LEVEL.lower() == "debug":
 
 if REFRESH_ENTRIES.lower() == "true":
     REFRESH_ENTRIES = True
+elif REFRESH_ENTRIES.lower() == "false":
+    REFRESH_ENTRIES = False
 
 if SWARM_MODE.lower() == "true":
     SWARM_MODE = True
+elif SWARM_MODE.lower() == "false":
+    SWARM_MODE = False
 
 
 if CONTAINER_LOG_LEVEL == "DEBUG" :
