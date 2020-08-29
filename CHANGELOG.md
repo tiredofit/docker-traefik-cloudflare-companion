@@ -1,3 +1,13 @@
+## 6.1.0 2020-08-28 <dave at tiredofit dot ca>
+
+   ### Added
+      - Swarm Mode detection for 'update' events
+      - Case insensitive variables for SWARM_MODE, REFRESH_ENTRIES
+      - Lots more verbosity with CONTAINER_LOG_LEVEL=DEBUG
+
+   ### Changed
+      - Reworked Swarm Support
+
 ## 6.0.2 2020-08-27 <dave at tiredofit dot ca>
 
    ### Changed

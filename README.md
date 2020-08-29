@@ -87,14 +87,14 @@ Along with the Environment Variables from the [Base image](https://hub.docker.co
 | `DOCKER_TLS_VERIFY` | (optional) If using tcp conneciton to socket Verify TLS                                 | `1`                          |
 | `REFRESH_ENTRIES`   | If record exists, update entry with new values `TRUE` or `FALSE`                        | `TRUE`                       |
 | `SWARM_MODE`        | Enable Docker Swarm Mode `TRUE` or `FALSE`                                              | `FALSE`                      |
-| `CF_EMAIL`          | Email address tied to Cloudflare Account - Leave Blank or `None`for Scoped API          |                              |
+| `CF_EMAIL`          | Email address tied to Cloudflare Account - Leave Blank  for Scoped API                  |                              |
 | `CF_TOKEN`          | API Token for the Domain                                                                |                              |
 | `DEFAULT_TTL`       | TTL to apply to records                                                                 | `1`                          |
 | `TARGET_DOMAIN`     | Destination Host to forward records to e.g. `host.example.com`                          |                              |
 | `DOMAIN1`           | Domain 1 you wish to update records for.                                                |                              |
 | `DOMAIN1_ZONE_ID`   | Domain 1 Zone ID from Cloudflare                                                        |                              |
 | `DOMAIN1_PROXIED`   | Domain 1 True or False if proxied                                                       |                              |
-| `DOMAIN2`           | (optional Domain 2 you wish to update records for.                                      |                              |
+| `DOMAIN2`           | (optional Domain 2 you wish to update records for.)                                     |                              |
 | `DOMAIN2_ZONE_ID`   | Domain 2 Zone ID from Cloudflare                                                        |                              |
 | `DOMAIN2_PROXIED`   | Domain 1 True or False if proxied                                                       |                              |
 | `DOMAIN3....`       | And so on..                                                                             |                              |
