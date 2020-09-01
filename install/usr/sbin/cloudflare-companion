@@ -236,9 +236,11 @@ else :
     else:
           cf = CloudFlare.CloudFlare(email=email, token=token)
 
-
 client= docker.from_env()
-api= docker.APIClient()
+
+if SWARM_MODE:
+    api= docker.APIClient()
+
 doms= init_doms_from_env()
 
 init(doms)

@@ -1,3 +1,9 @@
+## 6.1.2 2020-09-01 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Stop calling Docker Low Level API if SWARM_MODE=FALSE
+
+
 ## 6.1.1 2020-08-29 <dave at tiredofit dot ca>
 
    ### Changed
