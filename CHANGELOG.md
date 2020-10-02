@@ -1,3 +1,8 @@
+## 6.1.3 2020-10-01 <drevantonder@github>
+
+   ### Changed
+      - Reverted back to looking up swarm information per service not container - Swarm mode should finally be working now
+
 ## 6.1.2 2020-09-01 <dave at tiredofit dot ca>
 
    ### Changed
