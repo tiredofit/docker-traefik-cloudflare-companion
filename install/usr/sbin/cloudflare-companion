@@ -145,8 +145,8 @@ def check_service_t2(s, doms):
          print ("[debug] Called check_service_t2 for:", s)
     cont_id = s
     s = client.services.get(s)
-    for prop in s.attrs.get(u'Spec').get(u'TaskTemplate').get(u'ContainerSpec').get(u'Labels'):
-         value = s.attrs.get(u'Spec').get(u'TaskTemplate').get(u'ContainerSpec').get(u'Labels').get(prop)
+    for prop in s.attrs.get(u'Spec').get(u'Labels'):
+         value = s.attrs.get(u'Spec').get(u'Labels').get(prop)
          if re.match('traefik.*?\.rule', prop):
             if 'Host' in value:
                 if CONTAINER_LOG_LEVEL == "DEBUG" :
