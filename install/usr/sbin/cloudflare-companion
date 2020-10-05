@@ -59,11 +59,11 @@ def point_domain(name, doms):
                 try:
                     if len(records) == 0:
                         r = cf.zones.dns_records.post(dom['zone_id'], data=data)
-                        print ("[info] Created new record:", name, "to point to", dom['target_domain'])
+                        print("[info] Created new record:", name, "to point to", dom['target_domain'])
                     else:
                         for record in records:
                             cf.zones.dns_records.put(dom['zone_id'], record["id"], data=data)
-                            print ("[info] Updated existing record:", name, "to point to", dom['target_domain'])
+                            print("[info] Updated existing record:", name, "to point to", dom['target_domain'])
                 except CloudFlare.exceptions.CloudFlareAPIError as e:
                     pass
             else:
