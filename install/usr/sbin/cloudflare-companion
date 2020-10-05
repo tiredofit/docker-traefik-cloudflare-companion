@@ -43,6 +43,9 @@ def init_doms_from_env():
 
 def point_domain(name, doms):
     for dom in doms:
+        if name == dom['target_domain']:
+            continue
+
         if name.find(dom['name']) >= 0:
             records = cf.zones.dns_records.get(dom['zone_id'], params={u'name':name})
             data = {
