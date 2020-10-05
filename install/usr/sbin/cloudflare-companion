@@ -30,6 +30,7 @@ def init_doms_from_env():
                 'proxied': os.environ.get("{}_PROXIED".format(k), "FALSE").upper() == "TRUE",
                 'zone_id': os.environ["{}_ZONE_ID".format(k)],
                 'ttl': os.environ.get("{}_TTL".format(k), DEFAULT_TTL),
+                'target_domain': os.environ.get("{}_TARGET_DOMAIN".format(k), target_domain),
             }
 
             doms.append(dom)
@@ -47,7 +48,7 @@ def point_domain(name, doms):
             data = {
                 u'type': u'CNAME',
                 u'name': name,
-                u'content': target_domain,
+                u'content': dom['target_domain'],
                 u'ttl': dom['ttl'],
                 u'proxied': dom['proxied']
             }
@@ -55,17 +56,17 @@ def point_domain(name, doms):
                 try:
                     if len(records) == 0:
                         r = cf.zones.dns_records.post(dom['zone_id'], data=data)
-                        print ("[info] Created new record:", name, "to point to", target_domain)
+                        print ("[info] Created new record:", name, "to point to", dom['target_domain'])
                     else:
                         for record in records:
                             cf.zones.dns_records.put(dom['zone_id'], record["id"], data=data)
-                            print ("[info] Updated existing record:", name, "to point to", target_domain)
+                            print ("[info] Updated existing record:", name, "to point to", dom['target_domain'])
                 except CloudFlare.exceptions.CloudFlareAPIError as e:
                     pass
             else:
                 try:
                     r = cf.zones.dns_records.post(dom['zone_id'], data=data)
-                    print ("[info] Created new record:", name, "to point to", target_domain)
+                    print("[info] Created new record:", name, "to point to", dom['target_domain'])
 
                 except CloudFlare.exceptions.CloudFlareAPIError as e:
                     print('** %s - %d %s' % (name, e, e))

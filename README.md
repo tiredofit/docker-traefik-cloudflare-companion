@@ -94,9 +94,11 @@ Along with the Environment Variables from the [Base image](https://hub.docker.co
 | `DOMAIN1`           | Domain 1 you wish to update records for.                                                |                              |
 | `DOMAIN1_ZONE_ID`   | Domain 1 Zone ID from Cloudflare                                                        |                              |
 | `DOMAIN1_PROXIED`   | Domain 1 True or False if proxied                                                       |                              |
+| `DOMAIN1_TARGET_DOMAIN` | (optional Domain 1 specific target domain)                                                       |                              |
 | `DOMAIN2`           | (optional Domain 2 you wish to update records for.)                                     |                              |
 | `DOMAIN2_ZONE_ID`   | Domain 2 Zone ID from Cloudflare                                                        |                              |
 | `DOMAIN2_PROXIED`   | Domain 1 True or False if proxied                                                       |                              |
+| `DOMAIN2_TARGET_DOMAIN`   | (optional Domain 2 specific target domain)                                                       |                              |
 | `DOMAIN3....`       | And so on..                                                                             |                              |
 
 ### Docker Secrets
