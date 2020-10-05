@@ -198,10 +198,20 @@ def init(doms):
 
 
 try:
+
+    # Check for uppercase docker secrets or env variables
     email = get_docker_secret('CF_EMAIL', autocast_name=False, getenv=True)
     token = get_docker_secret('CF_TOKEN', autocast_name=False, getenv=True)
-    target_domain= os.environ['TARGET_DOMAIN']
-    domain= os.environ['DOMAIN1']
+
+    # Check for lowercase docker secrets
+    if not email:
+        email = get_docker_secret('CF_EMAIL', autocast_name=True, getenv=True)
+    if not token:
+        token = get_docker_secret('CF_TOKEN', autocast_name=True, getenv=True)
+
+    target_domain = os.environ['TARGET_DOMAIN']
+    domain = os.environ['DOMAIN1']
+
 except KeyError as e:
     exit("ERROR: {} not defined".format(e))
 
