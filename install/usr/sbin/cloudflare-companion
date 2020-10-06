@@ -5,15 +5,15 @@ from datetime import datetime
 from get_docker_secret import get_docker_secret
 import CloudFlare
 import docker
-import json
 import os
 import re
 
 DEFAULT_TTL = os.environ.get('DEFAULT_TTL', "1")
 SWARM_MODE = os.environ.get('SWARM_MODE', "FALSE")
-REFRESH_ENTRIES = os.environ.get('REFRESH_ENTRIES', "FALSE" )
+REFRESH_ENTRIES = os.environ.get('REFRESH_ENTRIES', "FALSE")
 TRAEFIK_VERSION = os.environ.get('TRAEFIK_VERSION', "2")
 CONTAINER_LOG_LEVEL = os.environ.get('CONTAINER_LOG_LEVEL', "INFO")
+
 
 def init_doms_from_env():
     RX_DOMS = re.compile('^DOMAIN[0-9]+$', re.IGNORECASE)
@@ -43,7 +43,7 @@ def init_doms_from_env():
 def point_domain(name, doms):
     for dom in doms:
         if name.find(dom['name']) >= 0:
-            records = cf.zones.dns_records.get(dom['zone_id'], params={u'name':name})
+            records = cf.zones.dns_records.get(dom['zone_id'], params={u'name': name})
             data = {
                 u'type': u'CNAME',
                 u'name': name,
@@ -51,157 +51,167 @@ def point_domain(name, doms):
                 u'ttl': dom['ttl'],
                 u'proxied': dom['proxied']
             }
-            if REFRESH_ENTRIES :
+            if REFRESH_ENTRIES:
                 try:
                     if len(records) == 0:
                         r = cf.zones.dns_records.post(dom['zone_id'], data=data)
-                        print ("[info] Created new record:", name, "to point to", target_domain)
+                        print("[info] Created new record:", name, "to point to", target_domain)
                     else:
                         for record in records:
                             cf.zones.dns_records.put(dom['zone_id'], record["id"], data=data)
-                            print ("[info] Updated existing record:", name, "to point to", target_domain)
+                            print("[info] Updated existing record:", name, "to point to", target_domain)
                 except CloudFlare.exceptions.CloudFlareAPIError as e:
                     pass
             else:
                 try:
                     r = cf.zones.dns_records.post(dom['zone_id'], data=data)
-                    print ("[info] Created new record:", name, "to point to", target_domain)
+                    print("[info] Created new record:", name, "to point to", target_domain)
 
                 except CloudFlare.exceptions.CloudFlareAPIError as e:
                     print('** %s - %d %s' % (name, e, e))
 
 
 def check_container_t1(c, doms):
-    if CONTAINER_LOG_LEVEL == "DEBUG" :
-         print ("[debug] Called check_container_t1 for:", c)
-    cont_id= c.attrs.get(u'Id')
+    if CONTAINER_LOG_LEVEL == "DEBUG":
+        print("[debug] Called check_container_t1 for:", c)
+    cont_id = c.attrs.get(u'Id')
     for prop in c.attrs.get(u'Config').get(u'Labels'):
-         if re.match('traefik.*.frontend.rule', prop) :
-            value= c.attrs.get(u'Config').get(u'Labels').get(prop)
+        if re.match('traefik.*.frontend.rule', prop):
+            value = c.attrs.get(u'Config').get(u'Labels').get(prop)
             if 'Host' in value:
                 value = value.split("Host:")[1].strip()
-                if CONTAINER_LOG_LEVEL == "DEBUG" :
-                    print ("[debug] Container ID:", cont_id, "rule value:", value)
+                if CONTAINER_LOG_LEVEL == "DEBUG":
+                    print("[debug] Container ID:", cont_id, "rule value:", value)
                 if ',' in value:
                     for v in value.split(","):
-                        print ("[info] Found Container ID:", cont_id,"with Multi-Hostname",v)
+                        print("[info] Found Container ID:", cont_id, "with Multi-Hostname", v)
                         point_domain(v, doms)
                 else:
-                    print ("[info] Found Container ID:", cont_id,"with Hostname", value)
+                    print("[info] Found Container ID:", cont_id, "with Hostname", value)
                     point_domain(value, doms)
             else:
                 pass
 
 
 def check_service_t1(s, doms):
-    if CONTAINER_LOG_LEVEL == "DEBUG" :
-         print ("[debug] Called check_service_t1 for:", s)
+    if CONTAINER_LOG_LEVEL == "DEBUG":
+        print("[debug] Called check_service_t1 for:", s)
     cont_id = s
     s = client.services.get(s)
     for prop in s.attrs.get(u'Spec').get(u'TaskTemplate').get(u'ContainerSpec').get(u'Labels'):
-         if re.match('traefik.*.frontend.rule', prop) :
+        if re.match('traefik.*.frontend.rule', prop):
             value = s.attrs.get(u'Spec').get(u'TaskTemplate').get(u'ContainerSpec').get(u'Labels').get(prop)
             if 'Host' in value:
                 value = value.split("Host:")[1].strip()
-                if CONTAINER_LOG_LEVEL == "DEBUG" :
-                    print ("[debug] Service ID:", cont_id, "rule value:", value)
+                if CONTAINER_LOG_LEVEL == "DEBUG":
+                    print("[debug] Service ID:", cont_id, "rule value:", value)
                 if ',' in value:
                     for v in value.split(","):
-                        print ("[info] Found Service ID:", cont_id,"with Multi-Hostname",v)
+                        print("[info] Found Service ID:", cont_id, "with Multi-Hostname", v)
                         point_domain(v, doms)
                 else:
-                    print ("[info] Found Service ID:", cont_id,"with Hostname", value)
+                    print("[info] Found Service ID:", cont_id, "with Hostname", value)
                     point_domain(value, doms)
             else:
                 pass
 
 
 def check_container_t2(c, doms):
-    if CONTAINER_LOG_LEVEL == "DEBUG" :
-         print ("[debug] Called check_container_t2 for:", c)
+    if CONTAINER_LOG_LEVEL == "DEBUG":
+        print("[debug] Called check_container_t2 for:", c)
     cont_id = c.attrs.get(u'Id')
     for prop in c.attrs.get(u'Config').get(u'Labels'):
-         value = c.attrs.get(u'Config').get(u'Labels').get(prop)
-         if re.match('traefik.*?\.rule', prop):
+        value = c.attrs.get(u'Config').get(u'Labels').get(prop)
+        if re.match('traefik.*?\.rule', prop):
             if 'Host' in value:
-                if CONTAINER_LOG_LEVEL == "DEBUG" :
-                    print ("[debug] Container ID:", cont_id, "rule value:", value)
-                extracted_domains= re.findall(r'Host.*?\(`(.*?)`\)', value)
-                if CONTAINER_LOG_LEVEL == "DEBUG" :
-                    print ("[debug] Container ID:", cont_id, "extracted domains from rule:", extracted_domains)
+                if CONTAINER_LOG_LEVEL == "DEBUG":
+                    print("[debug] Container ID:", cont_id, "rule value:", value)
+                extracted_domains = re.findall(r'Host.*?\(`(.*?)`\)', value)
+                if CONTAINER_LOG_LEVEL == "DEBUG":
+                    print("[debug] Container ID:", cont_id, "extracted domains from rule:", extracted_domains)
                 if len(extracted_domains) > 1:
                     for v in extracted_domains:
-                        print ("[info] Found Container ID:", cont_id, "with Multi-Hostname", v)
+                        print("[info] Found Container ID:", cont_id, "with Multi-Hostname", v)
                         point_domain(v, doms)
                 elif len(extracted_domains) == 1:
-                    print ("[info] Found Container ID:", cont_id, "with Hostname", extracted_domains[0])
+                    print("[info] Found Container ID:", cont_id, "with Hostname", extracted_domains[0])
                     point_domain(extracted_domains[0], doms)
             else:
                 pass
 
 
 def check_service_t2(s, doms):
-    if CONTAINER_LOG_LEVEL == "DEBUG" :
-         print ("[debug] Called check_service_t2 for:", s)
+    if CONTAINER_LOG_LEVEL == "DEBUG":
+        print("[debug] Called check_service_t2 for:", s)
     cont_id = s
     s = client.services.get(s)
     for prop in s.attrs.get(u'Spec').get(u'Labels'):
-         value = s.attrs.get(u'Spec').get(u'Labels').get(prop)
-         if re.match('traefik.*?\.rule', prop):
+        value = s.attrs.get(u'Spec').get(u'Labels').get(prop)
+        if re.match('traefik.*?\.rule', prop):
             if 'Host' in value:
-                if CONTAINER_LOG_LEVEL == "DEBUG" :
-                    print ("[debug] Service ID:", cont_id, "rule value:", value)
-                extracted_domains= re.findall(r'Host.*?\(`(.*?)`\)', value)
-                if CONTAINER_LOG_LEVEL == "DEBUG" :
-                    print ("[debug] Service ID:", cont_id, "extracted domains from rule:", extracted_domains)
+                if CONTAINER_LOG_LEVEL == "DEBUG":
+                    print("[debug] Service ID:", cont_id, "rule value:", value)
+                extracted_domains = re.findall(r'Host.*?\(`(.*?)`\)', value)
+                if CONTAINER_LOG_LEVEL == "DEBUG":
+                    print("[debug] Service ID:", cont_id, "extracted domains from rule:", extracted_domains)
                 if len(extracted_domains) > 1:
                     for v in extracted_domains:
-                        print ("[info] Found Service ID:", cont_id, "with Multi-Hostname", v)
+                        print("[info] Found Service ID:", cont_id, "with Multi-Hostname", v)
                         point_domain(v, doms)
                 elif len(extracted_domains) == 1:
-                    print ("[info] Found Service ID:", cont_id, "with Hostname", extracted_domains[0])
+                    print("[info] Found Service ID:", cont_id, "with Hostname", extracted_domains[0])
                     point_domain(extracted_domains[0], doms)
             else:
                 pass
 
 
 def init(doms):
-    if CONTAINER_LOG_LEVEL == "DEBUG" :
-        print ("[debug] Starting Initialization Routines")
+    if CONTAINER_LOG_LEVEL == "DEBUG":
+        print("[debug] Starting Initialization Routines")
 
     for c in client.containers.list():
-        if CONTAINER_LOG_LEVEL == "DEBUG" :
-            print ("[debug] Container List Discovery Loop")
+        if CONTAINER_LOG_LEVEL == "DEBUG":
+            print("[debug] Container List Discovery Loop")
 
-        if TRAEFIK_VERSION == "1" :
+        if TRAEFIK_VERSION == "1":
             check_container_t1(c, doms)
-        elif TRAEFIK_VERSION == "2" :
+        elif TRAEFIK_VERSION == "2":
             check_container_t2(c, doms)
 
-    if SWARM_MODE :
-        if CONTAINER_LOG_LEVEL == "DEBUG" :
-            print ("[debug] Service List Discovery Loop")
+    if SWARM_MODE:
+        if CONTAINER_LOG_LEVEL == "DEBUG":
+            print("[debug] Service List Discovery Loop")
         for s in api.services():
             full_serv_id = s["ID"]
             short_serv_id = full_serv_id[:10]
-            serv_id = "<Service: " + short_serv_id +">"
+            serv_id = "<Service: " + short_serv_id + ">"
             cont = str(api.containers(quiet=1, filters={'label': 'com.docker.swarm.service.id=' + full_serv_id}))
             full_cont_id = cont[9:-4]
             short_cont_id = full_cont_id[:10]
-            cont_id = "<Container: " + short_cont_id +">"
-            if TRAEFIK_VERSION == "1" :
+            cont_id = "<Container: " + short_cont_id + ">"
+            if TRAEFIK_VERSION == "1":
                 check_service_t1(full_serv_id, doms)
-            elif TRAEFIK_VERSION == "2" :
+            elif TRAEFIK_VERSION == "2":
                 check_service_t2(full_serv_id, doms)
             else:
                 pass
 
 
 try:
+
+    # Check for uppercase docker secrets or env variables
     email = get_docker_secret('CF_EMAIL', autocast_name=False, getenv=True)
     token = get_docker_secret('CF_TOKEN', autocast_name=False, getenv=True)
-    target_domain= os.environ['TARGET_DOMAIN']
-    domain= os.environ['DOMAIN1']
+
+    # Check for lowercase docker secrets
+    if not email:
+        email = get_docker_secret('CF_EMAIL', autocast_name=True, getenv=True)
+    if not token:
+        token = get_docker_secret('CF_TOKEN', autocast_name=True, getenv=True)
+
+    target_domain = os.environ['TARGET_DOMAIN']
+    domain = os.environ['DOMAIN1']
+
 except KeyError as e:
     exit("ERROR: {} not defined".format(e))
 
@@ -218,72 +228,70 @@ if SWARM_MODE.lower() == "true":
 elif SWARM_MODE.lower() == "false":
     SWARM_MODE = False
 
-
-if CONTAINER_LOG_LEVEL == "DEBUG" :
-    print ("[debug] Swarm Mode:", SWARM_MODE)
-    print ("[debug] Refresh Entries:", REFRESH_ENTRIES)
-    print ("[debug] Traefik Version:", TRAEFIK_VERSION)
-    print ("[debug] Default TTL:", DEFAULT_TTL)
-    if not email :
-          print ("[debug] API Mode: Scoped")
-          cf = CloudFlare.CloudFlare(debug=True, token=token)
+if CONTAINER_LOG_LEVEL == "DEBUG":
+    print("[debug] Swarm Mode:", SWARM_MODE)
+    print("[debug] Refresh Entries:", REFRESH_ENTRIES)
+    print("[debug] Traefik Version:", TRAEFIK_VERSION)
+    print("[debug] Default TTL:", DEFAULT_TTL)
+    if not email:
+        print("[debug] API Mode: Scoped")
+        cf = CloudFlare.CloudFlare(debug=True, token=token)
     else:
-          print ("[debug] API Mode: Global")
-          cf = CloudFlare.CloudFlare(debug=True, email=email, token=token)
-else :
-    if not email :
-          cf = CloudFlare.CloudFlare(token=token)
+        print("[debug] API Mode: Global")
+        cf = CloudFlare.CloudFlare(debug=True, email=email, token=token)
+else:
+    if not email:
+        cf = CloudFlare.CloudFlare(token=token)
     else:
-          cf = CloudFlare.CloudFlare(email=email, token=token)
+        cf = CloudFlare.CloudFlare(email=email, token=token)
 
-client= docker.from_env()
+client = docker.from_env()
 
 if SWARM_MODE:
-    api= docker.APIClient()
+    api = docker.APIClient()
 
-doms= init_doms_from_env()
+doms = init_doms_from_env()
 
 init(doms)
 
-if CONTAINER_LOG_LEVEL == "DEBUG" :
-    print ("[debug] Starting event watch routines")
+if CONTAINER_LOG_LEVEL == "DEBUG":
+    print("[debug] Starting event watch routines")
 
-t= datetime.now().strftime("%s")
+t = datetime.now().strftime("%s")
 
-if CONTAINER_LOG_LEVEL == "DEBUG" :
-    print ("[debug] Time:", t)
-
+if CONTAINER_LOG_LEVEL == "DEBUG":
+    print("[debug] Time:", t)
 
 for event in client.events(since=t, filters={'Type': 'service', 'Action': u'update', 'status': u'start'}, decode=True):
 
-    if event.get(u'status') == u'start' :
+    if event.get(u'status') == u'start':
         try:
-            if TRAEFIK_VERSION == "1" :
+            if TRAEFIK_VERSION == "1":
                 check_container_t1(client.containers.get(event.get(u'id')), doms)
-                if SWARM_MODE :
+                if SWARM_MODE:
                     check_service_t1(client.services.get(event.get(u'id')), doms)
-            elif TRAEFIK_VERSION == "2" :
+            elif TRAEFIK_VERSION == "2":
                 check_container_t2(client.containers.get(event.get(u'id')), doms)
-                if SWARM_MODE :
+                if SWARM_MODE:
                     check_service_t2(client.services.get(event.get(u'id')), doms)
 
         except docker.errors.NotFound as e:
             pass
 
-    if SWARM_MODE :
-        if event.get(u'Action') == u'update' :
-           try:
-               if TRAEFIK_VERSION == "1" :
-                   node_id = event.get(u'Actor').get(u'ID')
-                   if CONTAINER_LOG_LEVEL == "DEBUG" :
-                       print ("[debug] Detected Update on node:", node_id)
-                   check_service_t1(node_id , doms)
-               elif TRAEFIK_VERSION == "2" :
-                   node_id = event.get(u'Actor').get(u'ID')
-                   service_id = client.services.list()
-                   if CONTAINER_LOG_LEVEL == "DEBUG" :
-                       print ("[debug] Detected Update on node:", node_id)
-                   check_service_t2(node_id , doms)
+    if SWARM_MODE:
+        if event.get(u'Action') == u'update':
+            try:
+                if TRAEFIK_VERSION == "1":
+                    node_id = event.get(u'Actor').get(u'ID')
+                    if CONTAINER_LOG_LEVEL == "DEBUG":
+                        print("[debug] Detected Update on node:", node_id)
+                    check_service_t1(node_id, doms)
+                elif TRAEFIK_VERSION == "2":
+                    node_id = event.get(u'Actor').get(u'ID')
+                    service_id = client.services.list()
+                    if CONTAINER_LOG_LEVEL == "DEBUG":
+                        print("[debug] Detected Update on node:", node_id)
+                    check_service_t2(node_id, doms)
 
-           except docker.errors.NotFound as e:
-               pass
+            except docker.errors.NotFound as e:
+                pass
