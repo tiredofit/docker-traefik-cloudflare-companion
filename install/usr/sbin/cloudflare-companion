@@ -145,7 +145,7 @@ def check_container_t2(c, doms):
                         logger.info("Found Service ID: %s with Multi-Hostname %s", cont_id, v)
                         point_domain(v, doms)
                 elif len(extracted_domains) == 1:
-                    logger.info("Found Service ID: %s with Hostname %s", cont_id, v)
+                    logger.info("Found Service ID: %s with Hostname %s", cont_id, extracted_domains[0])
                     point_domain(extracted_domains[0], doms)
             else:
                 pass
@@ -169,7 +169,7 @@ def check_service_t2(s, doms):
                         logger.info("Found Service ID: %s with Multi-Hostname %s", cont_id, v)
                         point_domain(v, doms)
                 elif len(extracted_domains) == 1:
-                    logger.info("Found Service ID: %s with Hostname %s", cont_id, v)
+                    logger.info("Found Service ID: %s with Hostname %s", cont_id, extracted_domains[0])
                     point_domain(extracted_domains[0], doms)
             else:
                 pass
