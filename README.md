@@ -65,6 +65,10 @@ For those wishing to assign multiple CNAMEs to a container use the following for
 
 - Traefik 2.x
 ````bash
+  - traefik.http.routers.example.rule=Host(`example1.domain.tld`, `example2.domain.tld`)
+````
+or
+````bash
   - traefik.http.routers.example.rule=Host(`example1.domain.tld`) || Host(`example2.domain.tld`)
 ````
 
@@ -103,7 +107,8 @@ Along with the Environment Variables from the [Base image](https://hub.docker.co
 
 ### Docker Secrets
 
-`CF_EMAIL` and `CF_TOKEN` support Docker Secrets
+`CF_EMAIL` and `CF_TOKEN` support Docker Secrets.
+Name your secrets either CF_EMAIL and CF_TOKEN or cf_email and cf_token. 
 
 ## Maintenance
 ### Shell Access

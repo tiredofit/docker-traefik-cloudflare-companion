@@ -137,7 +137,7 @@ def check_container_t2(c, doms):
             if 'Host' in value:
                 if CONTAINER_LOG_LEVEL == "DEBUG":
                     print("[debug] Container ID:", cont_id, "rule value:", value)
-                extracted_domains = re.findall(r'Host.*?\(`(.*?)`\)', value)
+                extracted_domains = re.findall(r'\`([a-zA-Z0-9\.]+)\`', value)
                 if CONTAINER_LOG_LEVEL == "DEBUG":
                     print("[debug] Container ID:", cont_id, "extracted domains from rule:", extracted_domains)
                 if len(extracted_domains) > 1:
@@ -161,7 +161,7 @@ def check_service_t2(s, doms):
             if 'Host' in value:
                 if CONTAINER_LOG_LEVEL == "DEBUG":
                     print("[debug] Service ID:", cont_id, "rule value:", value)
-                extracted_domains = re.findall(r'Host.*?\(`(.*?)`\)', value)
+                extracted_domains = re.findall(r'\`([a-zA-Z0-9\.]+)\`', value)
                 if CONTAINER_LOG_LEVEL == "DEBUG":
                     print("[debug] Service ID:", cont_id, "extracted domains from rule:", extracted_domains)
                 if len(extracted_domains) > 1:
