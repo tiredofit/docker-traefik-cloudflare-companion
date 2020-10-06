@@ -1,3 +1,13 @@
+## 6.2.0 2020-10-06 <mbjurstrom@github>
+
+   ### Added
+      - Ability to set a custom target domain per entry, or simply rely on default
+   
+   ### Changed
+      - Allow lowercase docker secrets
+      - Changed logging to use pythons internal logging mechanism
+
+
 ## 6.1.3 2020-10-01 <drevantonder@github>
 
    ### Changed
