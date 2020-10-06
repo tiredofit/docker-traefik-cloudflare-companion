@@ -1,3 +1,8 @@
+## 6.2.1 2020-10-06 <mbjurstrom@github>
+
+   ### Changed
+      - Fix for wrong variable when logging when checking container with Traefik 2
+
 ## 6.2.0 2020-10-06 <mbjurstrom@github>
 
    ### Added
