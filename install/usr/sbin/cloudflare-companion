@@ -7,12 +7,24 @@ import CloudFlare
 import docker
 import os
 import re
+import logging
 
 DEFAULT_TTL = os.environ.get('DEFAULT_TTL', "1")
 SWARM_MODE = os.environ.get('SWARM_MODE', "FALSE")
 REFRESH_ENTRIES = os.environ.get('REFRESH_ENTRIES', "FALSE")
 TRAEFIK_VERSION = os.environ.get('TRAEFIK_VERSION', "2")
 CONTAINER_LOG_LEVEL = os.environ.get('CONTAINER_LOG_LEVEL', "INFO")
+
+# set up logging
+logger = logging.getLogger(__name__)
+
+if CONTAINER_LOG_LEVEL == "DEBUG" or CONTAINER_LOG_LEVEL == "debug":
+    logger.setLevel(logging.DEBUG)
+
+ch = logging.StreamHandler()
+formatter = logging.Formatter('[%(levelname)s] %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 
 def init_doms_from_env():
@@ -36,7 +48,7 @@ def init_doms_from_env():
             doms.append(dom)
 
         except KeyError as e:
-            print("*** ERROR: {} is not set!".format(e))
+            logger.error("*** ERROR: {} is not set!".format(e))
 
     return doms
 
@@ -59,51 +71,44 @@ def point_domain(name, doms):
                 try:
                     if len(records) == 0:
                         r = cf.zones.dns_records.post(dom['zone_id'], data=data)
-                        print("[info] Created new record:", name, "to point to", dom['target_domain'])
+                        logger.info("Created new record: %s to point to %s", name, dom['target_domain'])
                     else:
                         for record in records:
                             cf.zones.dns_records.put(dom['zone_id'], record["id"], data=data)
-                            print("[info] Updated existing record:", name, "to point to", dom['target_domain'])
-                        print("[info] Created new record:", name, "to point to", target_domain)
-                    else:
-                        for record in records:
-                            cf.zones.dns_records.put(dom['zone_id'], record["id"], data=data)
-                            print("[info] Updated existing record:", name, "to point to", target_domain)
+                            logger.info("Updated existing record: %s to point to %s", name, dom['target_domain'])
                 except CloudFlare.exceptions.CloudFlareAPIError as e:
                     pass
             else:
                 try:
                     r = cf.zones.dns_records.post(dom['zone_id'], data=data)
-                    print("[info] Created new record:", name, "to point to", dom['target_domain'])
+                    logger.info("Created new record: %s to point to %s", name, dom['target_domain'])
+
                 except CloudFlare.exceptions.CloudFlareAPIError as e:
-                    print('** %s - %d %s' % (name, e, e))
+                    logger.error('** %s - %d %s' % (name, e, e))
 
 
 def check_container_t1(c, doms):
-    if CONTAINER_LOG_LEVEL == "DEBUG":
-        print("[debug] Called check_container_t1 for:", c)
+    logger.debug("Called check_container_t1 for: %s", c)
     cont_id = c.attrs.get(u'Id')
     for prop in c.attrs.get(u'Config').get(u'Labels'):
         if re.match('traefik.*.frontend.rule', prop):
             value = c.attrs.get(u'Config').get(u'Labels').get(prop)
             if 'Host' in value:
                 value = value.split("Host:")[1].strip()
-                if CONTAINER_LOG_LEVEL == "DEBUG":
-                    print("[debug] Container ID:", cont_id, "rule value:", value)
+                logger.debug("Container ID:", cont_id, "rule value:", value)
                 if ',' in value:
                     for v in value.split(","):
-                        print("[info] Found Container ID:", cont_id, "with Multi-Hostname", v)
+                        logger.info("Found Container ID: %s with Multi-Hostname %s", cont_id, v)
                         point_domain(v, doms)
                 else:
-                    print("[info] Found Container ID:", cont_id, "with Hostname", value)
+                    logger.info("Found Container ID: %s with Hostname %s", cont_id, value)
                     point_domain(value, doms)
             else:
                 pass
 
 
 def check_service_t1(s, doms):
-    if CONTAINER_LOG_LEVEL == "DEBUG":
-        print("[debug] Called check_service_t1 for:", s)
+    logger.debug("Called check_service_t1 for: %s", s)
     cont_id = s
     s = client.services.get(s)
     for prop in s.attrs.get(u'Spec').get(u'TaskTemplate').get(u'ContainerSpec').get(u'Labels'):
@@ -111,22 +116,20 @@ def check_service_t1(s, doms):
             value = s.attrs.get(u'Spec').get(u'TaskTemplate').get(u'ContainerSpec').get(u'Labels').get(prop)
             if 'Host' in value:
                 value = value.split("Host:")[1].strip()
-                if CONTAINER_LOG_LEVEL == "DEBUG":
-                    print("[debug] Service ID:", cont_id, "rule value:", value)
+                logger.debug("Service ID: %s rule value: %s", cont_id, value)
                 if ',' in value:
                     for v in value.split(","):
-                        print("[info] Found Service ID:", cont_id, "with Multi-Hostname", v)
+                        logger.info("Found Service ID: %s with Multi-Hostname %s", cont_id, v)
                         point_domain(v, doms)
                 else:
-                    print("[info] Found Service ID:", cont_id, "with Hostname", value)
+                    logger.info("Found Service ID: %s with Hostname %s", cont_id, value)
                     point_domain(value, doms)
             else:
                 pass
 
 
 def check_container_t2(c, doms):
-    if CONTAINER_LOG_LEVEL == "DEBUG":
-        print("[debug] Called check_container_t2 for:", c)
+    logger.debug("Called check_container_t2 for: %s", c)
     cont_id = c.attrs.get(u'Id')
     for prop in c.attrs.get(u'Config').get(u'Labels'):
         value = c.attrs.get(u'Config').get(u'Labels').get(prop)
@@ -139,18 +142,17 @@ def check_container_t2(c, doms):
                     print("[debug] Container ID:", cont_id, "extracted domains from rule:", extracted_domains)
                 if len(extracted_domains) > 1:
                     for v in extracted_domains:
-                        print("[info] Found Container ID:", cont_id, "with Multi-Hostname", v)
+                        logger.info("Found Service ID: %s with Multi-Hostname %s", cont_id, v)
                         point_domain(v, doms)
                 elif len(extracted_domains) == 1:
-                    print("[info] Found Container ID:", cont_id, "with Hostname", extracted_domains[0])
+                    logger.info("Found Service ID: %s with Hostname %s", cont_id, v)
                     point_domain(extracted_domains[0], doms)
             else:
                 pass
 
 
 def check_service_t2(s, doms):
-    if CONTAINER_LOG_LEVEL == "DEBUG":
-        print("[debug] Called check_service_t2 for:", s)
+    logger.debug("Called check_service_t2 for: %s", s)
     cont_id = s
     s = client.services.get(s)
     for prop in s.attrs.get(u'Spec').get(u'Labels'):
@@ -164,31 +166,27 @@ def check_service_t2(s, doms):
                     print("[debug] Service ID:", cont_id, "extracted domains from rule:", extracted_domains)
                 if len(extracted_domains) > 1:
                     for v in extracted_domains:
-                        print("[info] Found Service ID:", cont_id, "with Multi-Hostname", v)
+                        logger.info("Found Service ID: %s with Multi-Hostname %s", cont_id, v)
                         point_domain(v, doms)
                 elif len(extracted_domains) == 1:
-                    print("[info] Found Service ID:", cont_id, "with Hostname", extracted_domains[0])
+                    logger.info("Found Service ID: %s with Hostname %s", cont_id, v)
                     point_domain(extracted_domains[0], doms)
             else:
                 pass
 
 
 def init(doms):
-    if CONTAINER_LOG_LEVEL == "DEBUG":
-        print("[debug] Starting Initialization Routines")
+    logger.debug("Starting Initialization Routines")
 
     for c in client.containers.list():
-        if CONTAINER_LOG_LEVEL == "DEBUG":
-            print("[debug] Container List Discovery Loop")
-
+        logger.debug("Container List Discovery Loop")
         if TRAEFIK_VERSION == "1":
             check_container_t1(c, doms)
         elif TRAEFIK_VERSION == "2":
             check_container_t2(c, doms)
 
     if SWARM_MODE:
-        if CONTAINER_LOG_LEVEL == "DEBUG":
-            print("[debug] Service List Discovery Loop")
+        logger.debug("Service List Discovery Loop")
         for s in api.services():
             full_serv_id = s["ID"]
             short_serv_id = full_serv_id[:10]
@@ -206,7 +204,6 @@ def init(doms):
 
 
 try:
-
     # Check for uppercase docker secrets or env variables
     email = get_docker_secret('CF_EMAIL', autocast_name=False, getenv=True)
     token = get_docker_secret('CF_TOKEN', autocast_name=False, getenv=True)
@@ -223,9 +220,6 @@ try:
 except KeyError as e:
     exit("ERROR: {} not defined".format(e))
 
-if CONTAINER_LOG_LEVEL.lower() == "debug":
-    CONTAINER_LOG_LEVEL = "DEBUG"
-
 if REFRESH_ENTRIES.lower() == "true":
     REFRESH_ENTRIES = True
 elif REFRESH_ENTRIES.lower() == "false":
@@ -236,22 +230,16 @@ if SWARM_MODE.lower() == "true":
 elif SWARM_MODE.lower() == "false":
     SWARM_MODE = False
 
-if CONTAINER_LOG_LEVEL == "DEBUG":
-    print("[debug] Swarm Mode:", SWARM_MODE)
-    print("[debug] Refresh Entries:", REFRESH_ENTRIES)
-    print("[debug] Traefik Version:", TRAEFIK_VERSION)
-    print("[debug] Default TTL:", DEFAULT_TTL)
-    if not email:
-        print("[debug] API Mode: Scoped")
-        cf = CloudFlare.CloudFlare(debug=True, token=token)
-    else:
-        print("[debug] API Mode: Global")
-        cf = CloudFlare.CloudFlare(debug=True, email=email, token=token)
+logger.debug("Swarm Mode: %s", SWARM_MODE)
+logger.debug("Refresh Entries: %s", REFRESH_ENTRIES)
+logger.debug("Traefik Version: %s", TRAEFIK_VERSION)
+logger.debug("Default TTL: %s", DEFAULT_TTL)
+if not email:
+    logger.debug("API Mode: Scoped")
+    cf = CloudFlare.CloudFlare(debug=True, token=token)
 else:
-    if not email:
-        cf = CloudFlare.CloudFlare(token=token)
-    else:
-        cf = CloudFlare.CloudFlare(email=email, token=token)
+    logger.debug("API Mode: Global")
+    cf = CloudFlare.CloudFlare(debug=True, email=email, token=token)
 
 client = docker.from_env()
 
@@ -262,13 +250,11 @@ doms = init_doms_from_env()
 
 init(doms)
 
-if CONTAINER_LOG_LEVEL == "DEBUG":
-    print("[debug] Starting event watch routines")
+logger.debug("Starting event watch routines")
 
 t = datetime.now().strftime("%s")
 
-if CONTAINER_LOG_LEVEL == "DEBUG":
-    print("[debug] Time:", t)
+logger.debug("Time:", t)
 
 for event in client.events(since=t, filters={'Type': 'service', 'Action': u'update', 'status': u'start'}, decode=True):
 
@@ -291,14 +277,12 @@ for event in client.events(since=t, filters={'Type': 'service', 'Action': u'upda
             try:
                 if TRAEFIK_VERSION == "1":
                     node_id = event.get(u'Actor').get(u'ID')
-                    if CONTAINER_LOG_LEVEL == "DEBUG":
-                        print("[debug] Detected Update on node:", node_id)
+                    logger.debug("Detected Update on node: %s", node_id)
                     check_service_t1(node_id, doms)
                 elif TRAEFIK_VERSION == "2":
                     node_id = event.get(u'Actor').get(u'ID')
                     service_id = client.services.list()
-                    if CONTAINER_LOG_LEVEL == "DEBUG":
-                        print("[debug] Detected Update on node:", node_id)
+                    logger.debug("Detected Update on node: %s", node_id)
                     check_service_t2(node_id, doms)
 
             except docker.errors.NotFound as e:
