@@ -135,11 +135,9 @@ def check_container_t2(c, doms):
         value = c.attrs.get(u'Config').get(u'Labels').get(prop)
         if re.match('traefik.*?\.rule', prop):
             if 'Host' in value:
-                if CONTAINER_LOG_LEVEL == "DEBUG":
-                    print("[debug] Container ID:", cont_id, "rule value:", value)
+                logger.debug("Container ID: %s rule value:%s", cont_id, value)
                 extracted_domains = re.findall(r'\`([a-zA-Z0-9\.]+)\`', value)
-                if CONTAINER_LOG_LEVEL == "DEBUG":
-                    print("[debug] Container ID:", cont_id, "extracted domains from rule:", extracted_domains)
+                logger.debug("Container ID: %s extracted domains from rule: %s", cont_id, extracted_domains)
                 if len(extracted_domains) > 1:
                     for v in extracted_domains:
                         logger.info("Found Service ID: %s with Multi-Hostname %s", cont_id, v)
@@ -159,11 +157,9 @@ def check_service_t2(s, doms):
         value = s.attrs.get(u'Spec').get(u'Labels').get(prop)
         if re.match('traefik.*?\.rule', prop):
             if 'Host' in value:
-                if CONTAINER_LOG_LEVEL == "DEBUG":
-                    print("[debug] Service ID:", cont_id, "rule value:", value)
+                logger.debug("Service ID: %s rule value: %s", cont_id, value)
                 extracted_domains = re.findall(r'\`([a-zA-Z0-9\.]+)\`', value)
-                if CONTAINER_LOG_LEVEL == "DEBUG":
-                    print("[debug] Service ID:", cont_id, "extracted domains from rule:", extracted_domains)
+                logger.debug("Service ID: %s extracted domains from rule: %s", cont_id, extracted_domains)
                 if len(extracted_domains) > 1:
                     for v in extracted_domains:
                         logger.info("Found Service ID: %s with Multi-Hostname %s", cont_id, v)
