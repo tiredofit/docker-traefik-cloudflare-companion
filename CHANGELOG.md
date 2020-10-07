@@ -1,3 +1,10 @@
+## 6.2.2 2020-10-06 <dave at tiredofit dot ca>
+
+   ### Added
+      - Switch to Python3 Packages
+      - Cleanup Image for 66% reduction in size
+
+
 ## 6.2.1 2020-10-06 <mbjurstrom@github>
 
    ### Changed

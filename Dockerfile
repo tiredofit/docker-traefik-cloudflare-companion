@@ -9,16 +9,32 @@ ENV ENABLE_CRON=false \
 RUN set -x && \
     apk update && \
     apk upgrade && \
-    apk add \
-    python3 \
-    python3-dev \
-    gcc \
-    musl-dev \
-    libffi-dev \
-    openssl-dev \
-    && \
+    apk add -t .tcc-build-deps \
+                gcc \
+                libffi-dev \
+                musl-dev \
+                openssl-dev \
+                py-pip \
+                py3-setuptools \
+                py3-wheel \
+                python3-dev \
+                && \
     \
-    curl https://bootstrap.pypa.io/get-pip.py | python3 - && \
+    apk add -t .tcc-run-deps \
+                py3-beautifulsoup4 \
+                py3-certifi \
+                py3-chardet \
+                py3-cryptography \
+                py3-idna \
+                py3-openssl \
+                py3-requests \
+                py3-soupsieve \
+                py3-urllib3 \
+                py3-websocket-client \
+                py3-yaml \
+                python3 \
+                && \
+    \
     pip install \
             cloudflare \
             get-docker-secret \
@@ -26,6 +42,7 @@ RUN set -x && \
             && \
     \
 ### Cleanup
+    apk del .tcc-build-deps && \
     rm -rf /root/.cache && \
     rm -rf /var/cache/apk/*
 
