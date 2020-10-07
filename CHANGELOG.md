@@ -1,3 +1,9 @@
+## 6.3.0 2020-10-06 <dchidell@github + mbjurstrom@github>
+
+   ### Added
+      - Support Alternate Syntax for Traefik 2 Hosts Host (host1,host2,host3)
+
+
 ## 6.2.2 2020-10-06 <dave at tiredofit dot ca>
 
    ### Added
