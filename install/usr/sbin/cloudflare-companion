@@ -18,8 +18,11 @@ CONTAINER_LOG_LEVEL = os.environ.get('CONTAINER_LOG_LEVEL', "INFO")
 # set up logging
 logger = logging.getLogger(__name__)
 
-if CONTAINER_LOG_LEVEL == "DEBUG" or CONTAINER_LOG_LEVEL == "debug":
+if CONTAINER_LOG_LEVEL.upper() == "DEBUG":
     logger.setLevel(logging.DEBUG)
+    DEBUG = True
+else:
+    DEBUG = False
 
 ch = logging.StreamHandler()
 formatter = logging.Formatter('[%(levelname)s] %(message)s')
@@ -232,10 +235,10 @@ logger.debug("Traefik Version: %s", TRAEFIK_VERSION)
 logger.debug("Default TTL: %s", DEFAULT_TTL)
 if not email:
     logger.debug("API Mode: Scoped")
-    cf = CloudFlare.CloudFlare(debug=True, token=token)
+    cf = CloudFlare.CloudFlare(debug=DEBUG, token=token)
 else:
     logger.debug("API Mode: Global")
-    cf = CloudFlare.CloudFlare(debug=True, email=email, token=token)
+    cf = CloudFlare.CloudFlare(debug=DEBUG, email=email, token=token)
 
 client = docker.from_env()
 
@@ -250,7 +253,7 @@ logger.debug("Starting event watch routines")
 
 t = datetime.now().strftime("%s")
 
-logger.debug("Time:", t)
+logger.debug("Time: %s", t)
 
 for event in client.events(since=t, filters={'Type': 'service', 'Action': u'update', 'status': u'start'}, decode=True):
 
