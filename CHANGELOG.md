@@ -1,3 +1,9 @@
+## 6.3.1 2020-10-16 <mbjurstrom@github>
+
+   ### Changed
+      - Fix for Debug mode always staying on
+      - Fix logger error when checking services under Traefik 2
+
 ## 6.3.0 2020-10-06 <dchidell@github + mbjurstrom@github>
 
    ### Added
