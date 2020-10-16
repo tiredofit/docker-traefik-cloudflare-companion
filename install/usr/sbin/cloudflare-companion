@@ -250,7 +250,7 @@ logger.debug("Starting event watch routines")
 
 t = datetime.now().strftime("%s")
 
-logger.debug("Time:", t)
+logger.debug("Time: %s", t)
 
 for event in client.events(since=t, filters={'Type': 'service', 'Action': u'update', 'status': u'start'}, decode=True):
 
