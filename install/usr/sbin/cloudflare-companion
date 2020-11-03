@@ -139,7 +139,7 @@ def check_container_t2(c, doms):
         if re.match('traefik.*?\.rule', prop):
             if 'Host' in value:
                 logger.debug("Container ID: %s rule value:%s", cont_id, value)
-                extracted_domains = re.findall(r'\`([a-zA-Z0-9\.]+)\`', value)
+                extracted_domains = re.findall(r'\`([a-zA-Z0-9\.\-]+)\`', value)
                 logger.debug("Container ID: %s extracted domains from rule: %s", cont_id, extracted_domains)
                 if len(extracted_domains) > 1:
                     for v in extracted_domains:
