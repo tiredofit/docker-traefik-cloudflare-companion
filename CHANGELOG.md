@@ -1,3 +1,8 @@
+## 6.3.2 2020-11-03 <james9909@github>
+
+   ### Changed
+      - Fix regex to allow matching for domains with dashes (-) in them
+
 ## 6.3.1 2020-10-16 <mbjurstrom@github>
 
    ### Changed
