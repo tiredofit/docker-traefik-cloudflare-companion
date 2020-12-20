@@ -17,12 +17,17 @@ CONTAINER_LOG_LEVEL = os.environ.get('CONTAINER_LOG_LEVEL', "INFO")
 
 # set up logging
 logger = logging.getLogger(__name__)
+DEBUG = False
+VERBOSE = False
 
 if CONTAINER_LOG_LEVEL.upper() == "DEBUG":
     logger.setLevel(logging.DEBUG)
     DEBUG = True
-else:
-    DEBUG = False
+
+if CONTAINER_LOG_LEVEL.upper() == "VERBOSE":
+    logger.setLevel(logging.DEBUG)
+    DEBUG = True
+    VERBOSE = True
 
 ch = logging.StreamHandler()
 formatter = logging.Formatter('[%(levelname)s] %(message)s')
@@ -46,6 +51,7 @@ def init_doms_from_env():
                 'zone_id': os.environ["{}_ZONE_ID".format(k)],
                 'ttl': os.environ.get("{}_TTL".format(k), DEFAULT_TTL),
                 'target_domain': os.environ.get("{}_TARGET_DOMAIN".format(k), target_domain),
+                'excluded_sub_domains': list(filter(None, os.environ.get("{}_EXCLUDED_SUB_DOMAINS".format(k), "").split(','))),
             }
 
             doms.append(dom)
@@ -53,7 +59,24 @@ def init_doms_from_env():
         except KeyError as e:
             logger.error("*** ERROR: {} is not set!".format(e))
 
+    for dom in doms:
+        logger.debug("Domain Configuration: %s", dom)
+        
     return doms
+
+
+def isExcluded(name, dom):
+    excluded_sub_domains = dom['excluded_sub_domains']
+
+    for sub_dom in excluded_sub_domains:
+        
+        fqdn_with_sub_dom = sub_dom + '.' + dom['name']
+    
+        if name.find(fqdn_with_sub_dom) != -1:
+            logger.info('Ignoring %s because it falls until excluded sub domain: %s', name, sub_dom)
+            return True
+        else:
+            return False
 
 
 def point_domain(name, doms):
@@ -62,6 +85,9 @@ def point_domain(name, doms):
             continue
 
         if name.find(dom['name']) >= 0:
+            if isExcluded(name, dom):
+                continue
+
             records = cf.zones.dns_records.get(dom['zone_id'], params={u'name': name})
             data = {
                 u'type': u'CNAME',
@@ -235,10 +261,10 @@ logger.debug("Traefik Version: %s", TRAEFIK_VERSION)
 logger.debug("Default TTL: %s", DEFAULT_TTL)
 if not email:
     logger.debug("API Mode: Scoped")
-    cf = CloudFlare.CloudFlare(debug=DEBUG, token=token)
+    cf = CloudFlare.CloudFlare(debug=VERBOSE, token=token)
 else:
     logger.debug("API Mode: Global")
-    cf = CloudFlare.CloudFlare(debug=DEBUG, email=email, token=token)
+    cf = CloudFlare.CloudFlare(debug=VERBOSE, email=email, token=token)
 
 client = docker.from_env()
 
