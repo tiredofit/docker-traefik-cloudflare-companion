@@ -1,3 +1,9 @@
+## 6.5.0 2021-01-14 <jackkellog@github>
+
+   ### Added
+      - Ability to exclude subdomains 
+      - Added verbose logging level for cloudflare
+
 ## 6.4.0 2021-01-14 <dave at tiredofit dot ca>
 
    ### Changed
