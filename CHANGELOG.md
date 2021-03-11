@@ -1,4 +1,10 @@
-## 6.5.0 2021-01-14 <jackkellog@github>
+## 6.5.1 2021-01-14 <zombielinux@github>
+
+   ### Fixed
+      - Regex parsing for domains with hyphens
+ 
+
+## 6.5.0 2021-02-22 <jackkellog@github>
 
    ### Added
       - Ability to exclude subdomains 
