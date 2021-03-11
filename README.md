@@ -101,7 +101,7 @@ Along with the Environment Variables from the [Base image](https://hub.docker.co
 | `DOMAIN1_EXCLUDED_SUB_DOMAINS` | (optional specify sub domain trees to be ignored in lables) ex: `DOMAIN1_EXCLUDED_SUB_DOMAINS=int` would not create a CNAME for `*.int.example.com` | |
 | `DOMAIN2`           | (optional Domain 2 you wish to update records for.)                                     |                              |
 | `DOMAIN2_ZONE_ID`   | Domain 2 Zone ID from Cloudflare                                                        |                              |
-| `DOMAIN2_PROXIED`   | Domain 1 True or False if proxied                                                       |                              |
+| `DOMAIN2_PROXIED`   | Domain 2 True or False if proxied                                                       |                              |
 | `DOMAIN2_TARGET_DOMAIN`   | (optional specify target_domain for Domain 2, overriding the default value from TARGET_DOMAIN)                                     |                              |
 | `DOMAIN2_EXCLUDED_SUB_DOMAINS` | (optional specify sub domain trees to be ignored in lables) ex: `DOMAIN2_EXCLUDED_SUB_DOMAINS=int` would not create a CNAME for `*.int.example2.com` | |
 | `DOMAIN3....`       | And so on..                                                                             |                              |
