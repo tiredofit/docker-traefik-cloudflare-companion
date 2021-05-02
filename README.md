@@ -1,10 +1,10 @@
-# hub.docker.com/r/tiredofit/traefik-cloudflare-companion
+# github.com/tiredofit/docker-traefik-cloudflare-companion
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/tiredofit/traefik-cloudflare-companion.svg)](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion)
 [![Docker Stars](https://img.shields.io/docker/stars/tiredofit/traefik-cloudflare-companion.svg)](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion)
 [![Docker Layers](https://images.microbadger.com/badges/image/tiredofit/traefik-cloudflare-companion.svg)](https://microbadger.com/images/tiredofit/traefik-cloudflare-companion)
 
-## Introduction
+## About
 
 Dockerfile to build a Container to automatically update Cloudflare DNS records upon container start. A time saver if you are regularly moving containers around to different systems. This will allow you to set multiple zone's you wish to update.
 
@@ -13,7 +13,7 @@ Dockerfile to build a Container to automatically update Cloudflare DNS records u
 
 [Changelog](CHANGELOG.md)
 
-## Authors
+## Maintainer
 
 - [Dave Conroy](http://github/tiredofit/)
 
@@ -33,7 +33,7 @@ Dockerfile to build a Container to automatically update Cloudflare DNS records u
   - [Shell Access](#shell-access)
 - [References](#references)
 
-## Prerequisites
+## Prerequisites and Assumptions
 
 This image assumes that you are using a reverse proxy such as [tiredofit/traefik](https://github.com/tiredofit/docker-traefik)
 
