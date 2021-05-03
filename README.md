@@ -42,7 +42,7 @@ This builds a Docker image to automatically update Cloudflare DNS records upon c
 - [References](#references)
 
 ## Prerequisites and Assumptions
-*  Assumes you are using Traefik as a revere proxy:
+*  Assumes you are using Traefik as a reverse proxy:
    *  [Traefik](https://github.com/tiredofit/docker-traefik)
 
 ## Installation
@@ -133,7 +133,7 @@ Be sure to view the following repositories to understand all the customizable op
 #### Docker Secrets
 
 `CF_EMAIL` and `CF_TOKEN` support Docker Secrets
-Name your secrets either CF_EMAIL and CF_TOKEN or cf_email and cf_token. 
+Name your secrets either CF_EMAIL and CF_TOKEN or cf_email and cf_token.
 
 ## Maintenance
 ### Shell Access
