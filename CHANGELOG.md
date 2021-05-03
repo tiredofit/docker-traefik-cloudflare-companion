@@ -1,3 +1,9 @@
+## 6.6.0 2021-05-02 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Add Rust during build step to compile python-cryptography
+
+
 ## 6.5.1 2021-01-14 <zombielinux@github>
 
    ### Fixed

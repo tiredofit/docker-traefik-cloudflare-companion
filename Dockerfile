@@ -10,6 +10,7 @@ RUN set -x && \
     apk update && \
     apk upgrade && \
     apk add -t .tcc-build-deps \
+                cargo \
                 gcc \
                 libffi-dev \
                 musl-dev \
@@ -24,7 +25,6 @@ RUN set -x && \
                 py3-beautifulsoup4 \
                 py3-certifi \
                 py3-chardet \
-                py3-cryptography \
                 py3-idna \
                 py3-openssl \
                 py3-requests \
@@ -43,7 +43,7 @@ RUN set -x && \
     \
 ### Cleanup
     apk del .tcc-build-deps && \
-    rm -rf /root/.cache && \
+    rm -rf /root/.cache /root/.cargo && \
     rm -rf /var/cache/apk/*
 
 ### Add Files
