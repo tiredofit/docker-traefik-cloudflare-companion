@@ -107,6 +107,7 @@ Be sure to view the following repositories to understand all the customizable op
 
 | Parameter           | Description                                                                             | Default                      |
 | ------------------- | --------------------------------------------------------------------------------------- | ---------------------------- |
+| `CONTAINER_LOG_LEVEL`| Specify log level for debugging purposes - `NONE`, `DEBUG` or `VERBOSE`                | `NONE`                       |       
 | `TRAEFIK_VERSION`   | What version of Traefik do you want to work against - `1` or `2`                        | `2`                          |
 | `DOCKER_ENTRYPOINT` | Docker Entrypoint default (local mode)                                                  | `unix://var/run/docker.sock` |
 | `DOCKER_HOST`       | (optional) If using tcp connection e.g. `tcp://111.222.111.32:2376`                     |                              |
