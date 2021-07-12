@@ -7,5 +7,5 @@ check_container_initialized
 check_service_initialized init
 liftoff
 
-print_info "Starting Traefik Cloudflare Companion"
+print_start "Starting Traefik Cloudflare Companion"
 exec python3 -u /usr/sbin/cloudflare-companion
