@@ -1,4 +1,4 @@
-FROM tiredofit/alpine:3.13
+FROM tiredofit/alpine:3.14
 LABEL maintainer="Dave Conroy (github.com/tiredofit)"
 
 ### Set Environment Variables
