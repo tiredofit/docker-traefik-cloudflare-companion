@@ -1,3 +1,9 @@
+## 6.6.2 2021-08-09 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Re enable cron for log rotation
+
+
 ## 6.6.1 2021-07-25 <dave at tiredofit dot ca>
 
    ### Added

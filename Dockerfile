@@ -1,9 +1,8 @@
-FROM tiredofit/alpine:3.14
+FROM tiredofit/alpine:3.13
 LABEL maintainer="Dave Conroy (github.com/tiredofit)"
 
 ### Set Environment Variables
-ENV ENABLE_CRON=false \
-    ENABLE_SMTP=false
+ENV CONTAINER_ENABLE_MESSAGING=FALSEENABLE_SMTP=false
 
 ### Dependencies
 RUN set -x && \
