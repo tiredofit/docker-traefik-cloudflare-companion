@@ -1,8 +1,8 @@
-FROM tiredofit/alpine:3.13
+FROM docker.io/tiredofit/alpine:3.13
 LABEL maintainer="Dave Conroy (github.com/tiredofit)"
 
 ### Set Environment Variables
-ENV CONTAINER_ENABLE_MESSAGING=FALSEENABLE_SMTP=false
+ENV CONTAINER_ENABLE_MESSAGING=FALSECONTAINER_ENABLE_MESSAGING=FALSE
 
 ### Dependencies
 RUN set -x && \
