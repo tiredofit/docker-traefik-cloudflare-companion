@@ -430,7 +430,6 @@ elif ENABLE_TRAEFIK_POLL.lower() == "false":
 if DRY_RUN:
     logger.warning("Dry Run: %s", DRY_RUN)
 logger.debug("Swarm Mode: %s", SWARM_MODE)
-logger.debug("Traefik Mode: %s", ENABLE_TRAEFIK_POLL)
 logger.debug("Refresh Entries: %s", REFRESH_ENTRIES)
 logger.debug("Traefik Version: %s", TRAEFIK_VERSION)
 logger.debug("Default TTL: %s", DEFAULT_TTL)
@@ -443,11 +442,18 @@ else:
 
 
 if ENABLE_TRAEFIK_POLL:
-    if uri_valid(TRAEFIK_POLL_URL):
-        logger.debug("Traefik Poll Url: %s", TRAEFIK_POLL_URL)
-        logger.debug("Traefik Poll Seconds: %s", TRAEFIK_POLL_SECONDS)
+    if TRAEFIK_VERSION == "2":
+        if uri_valid(TRAEFIK_POLL_URL):
+            logger.debug("Traefik Poll Url: %s", TRAEFIK_POLL_URL)
+            logger.debug("Traefik Poll Seconds: %s", TRAEFIK_POLL_SECONDS)
+        else:
+            ENABLE_TRAEFIK_POLL = False
+            logger.error("Traefik Polling Mode disabled because traefik url is invalid: %s", TRAEFIK_POLL_URL)
     else:
-        logger.error("Traefik Poll Url invalid: %s", TRAEFIK_POLL_URL)
+        ENABLE_TRAEFIK_POLL = False
+        logger.error("Traefik Polling Mode disabled because traefik version is not 2")
+
+logger.debug("Traefik Polling Mode: %s", False)
 
 client = docker.from_env()
 

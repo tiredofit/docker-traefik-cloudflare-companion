@@ -145,7 +145,7 @@ Name your secrets either CF_EMAIL and CF_TOKEN or cf_email and cf_token.
 
 ### Discovery
 
-cloudflare-companion supports three different discovery mode: Docker, Docker Swarm, and Traefik Polling.  The Docker discovery mode is only mode enabled by default.  Once matching host are discovered, cloudflare-companion will add or update CNAMEs in CloudFlare that point to the configured `TARGET_DOMAIN`.
+cloudflare-companion supports three different discovery mode: Docker, Docker Swarm, and Traefik Polling.  The Docker discovery mode is the only mode enabled by default.  Once matching hosts are discovered, cloudflare-companion will add or update CNAMEs in CloudFlare that point to the configured `TARGET_DOMAIN`.
 
 #### Docker
 
