@@ -114,8 +114,8 @@ Be sure to view the following repositories to understand all the customizable op
 | `DOCKER_TLS_VERIFY` | (optional) If using tcp conneciton to socket Verify TLS                                 | `1`                          |
 | `REFRESH_ENTRIES`   | If record exists, update entry with new values `TRUE` or `FALSE`                        | `TRUE`                       |
 | `SWARM_MODE`        | Enable Docker Swarm Mode `TRUE` or `FALSE`                                              | `FALSE`                      |
-| `TRAEFIK_MODE`      | Enable Traefik Polling Mode `TRUE` or `FALSE`                                           | `FALSE`                      |
-| `TRAEFIK_URL`       | (optional) If using Traefik Polling mode - URL to Traefik API endpoint                  |                              |
+| `ENABLE_TRAEFIK_POLL`      | Enable Traefik Polling Mode `TRUE` or `FALSE`                                           | `FALSE`                      |
+| `TRAEFIK_POLL_URL`       | (optional) If using Traefik Polling mode - URL to Traefik API endpoint                  |                              |
 | `TRAEFIK_POLL_SECONDS` | (optional) If using Traefik Polling mode - Seconds to delay between poll attemps     | `60`                         |
 | `TRAEFIK_INCLUDED_HOST1` | (optional) If using Traefik Polling mode - Regex patterns for hosts to include          | `.*`                         |
 | `TRAEFIK_INCLUDED_HOST...` | (optional traefik host include pattern 2 - N)                                           |                              |
@@ -142,6 +142,68 @@ Be sure to view the following repositories to understand all the customizable op
 
 `CF_EMAIL` and `CF_TOKEN` support Docker Secrets
 Name your secrets either CF_EMAIL and CF_TOKEN or cf_email and cf_token.
+
+### Discovery
+
+cloudflare-companion supports three different discovery mode: Docker, Docker Swarm, and Traefik Polling.  The Docker discovery mode is only mode enabled by default.  Once matching host are discovered, cloudflare-companion will add or update CNAMEs in CloudFlare that point to the configured `TARGET_DOMAIN`.
+
+#### Docker
+
+cloudflare-companion will discover running Docker containers by searching for supported labels.
+
+The supported labels are:
+
+| Traefik Version  |  Single Host  |  Multiple Host  |
+| ---------------- | ------------- | --------------- |
+| 1                | `traefik.normal.frontend.rule=Host:example1.domain.tld` | `traefik.normal.frontend.rule=Host:example1.domain.tld,example2.domain.tld` |
+| 2                | ``traefik.http.routers.example.rule=Host(`example1.domain.tld`)`` | ``traefik.http.routers.example.rule=Host(`example1.domain.tld`) || Host(`example2.domain.tld`)`` |
+
+#### Docker Swarm
+
+Docker Swarm mode can be enabled by setting the environment variable `SWARM_MODE=TRUE`.  This will cause cloudflare-companion to discover running Docker Swarm services with supported labels.
+
+The supported labels are:
+
+| Traefik Version  |  Single Host  |  Multiple Host  |
+| ---------------- | ------------- | --------------- |
+| 1                | `traefik.normal.frontend.rule=Host:example1.domain.tld` | `traefik.normal.frontend.rule=Host:example1.domain.tld,example2.domain.tld` |
+| 2                | ``traefik.http.routers.example.rule=Host(`example1.domain.tld`)`` | ``traefik.http.routers.example.rule=Host(`example1.domain.tld`) || Host(`example2.domain.tld`)`` |
+
+#### Traefik Polling
+
+Traefik Polling mode can be enabled by setting the environment variable `ENABLE_TRAEFIK_POLL=TRUE` and `TRAEFIK_POLL_URL=http://<host>:<port>`.  This will cause cloudflare-companion to poll Traefik every 60s (default) and discover routers and include hosts which match the following rules:
+
+1. Provider is not docker
+2. Status is enabled
+3. Name is present
+4. Rule contains Host(...)
+5. Host matches include patterns (default: .*)
+6. Host does not match exclude patterns (default: none)
+
+The polling interval can be configured by setting the environment variable `TRAEFIK_POLL_SECONDS=120`.
+
+##### Filtering
+
+Discovered hosts are matched against include and exclude patterns to determine if they should be included in the sync to CloudFlare.  By default, all found hosts are included.  Exclude patterns are higher priority than include patterns.  The defaults can be changed by configuring include and exclude patterns.
+
+###### Include Patterns
+
+Include patterns can be specified by defining one or more `TRAEFIK_INCLUDED_HOST<XXX>` variables such as `TRAEFIK_INCLUDED_HOST1=.*-data\.foobar\.com` and `TRAEFIK_INCLUDED_HOST2=.*-api\.foobar\.com`.  The pattern is a regular expression that is used to determine if the host should be included.
+
+###### Exclude Patterns
+
+Exclude patterns can be specified by defining one or more `TRAEFIK_EXCLUDED_HOST<XXX>` variables such as `TRAEFIK_EXCLUDED_HOST1=private-data\.foobar\.com` and `TRAEFIK_EXCLUDED_HOST2=.*-internal-api\.foobar\.com`.  The pattern is a regular expression that is used to determine if the host should be excluded.  Exclude patterns filter out results after include patterns are executed.
+
+- Traefik 1.x
+````bash
+  - traefik.normal.frontend.rule=Host:example1.domain.tld,example2.domain.tld
+````
+
+- Traefik 2.x
+````bash
+  - traefik.http.routers.example.rule=Host(`example1.domain.tld`) || Host(`example2.domain.tld`)
+````
+
 
 ## Maintenance
 ### Shell Access

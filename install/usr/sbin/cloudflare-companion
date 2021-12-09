@@ -17,10 +17,10 @@ from urllib.parse import urlparse
 
 DEFAULT_TTL = os.environ.get('DEFAULT_TTL', "1")
 SWARM_MODE = os.environ.get('SWARM_MODE', "FALSE")
-TRAEFIK_MODE = os.environ.get('TRAEFIK_MODE', "FALSE")
+ENABLE_TRAEFIK_POLL = os.environ.get('ENABLE_TRAEFIK_POLL', "FALSE")
 REFRESH_ENTRIES = os.environ.get('REFRESH_ENTRIES', "FALSE")
 TRAEFIK_VERSION = os.environ.get('TRAEFIK_VERSION', "2")
-TRAEFIK_URL = os.environ.get('TRAEFIK_URL', None)
+TRAEFIK_POLL_URL = os.environ.get('TRAEFIK_POLL_URL', None)
 TRAEFIK_POLL_SECONDS = int(os.environ.get('TRAEFIK_POLL_SECONDS', "60"))
 CONTAINER_LOG_LEVEL = os.environ.get('CONTAINER_LOG_LEVEL', "INFO")
 DRY_RUN = os.environ.get('DRY_RUN', "FALSE")
@@ -300,7 +300,7 @@ def check_service_t2(s):
 def check_traefik(included_hosts, excluded_hosts):
     mappings = {}
     logger.debug("Called check_traefik")
-    r = requests.get("{}/api/http/routers".format(TRAEFIK_URL))
+    r = requests.get("{}/api/http/routers".format(TRAEFIK_POLL_URL))
     if r.ok:
         for router in r.json():
             if "status" in router and router["status"] == "enabled":
@@ -369,19 +369,12 @@ def get_initial_mappings(included_hosts, excluded_hosts):
         logger.debug("Service List Discovery Loop")
         for s in api.services():
             full_serv_id = s["ID"]
-            # short_serv_id = full_serv_id[:10]
-            # cont = str(api.containers(quiet=1, filters={'label': 'com.docker.swarm.service.id=' + full_serv_id}))
-            # full_cont_id = cont[9:-4]
-            # short_cont_id = full_cont_id[:10]
-            # cont_id = "<Container: " + short_cont_id + ">"
             if TRAEFIK_VERSION == "1":
                 add_to_mappings(mappings, check_service_t1(full_serv_id))
             elif TRAEFIK_VERSION == "2":
                 add_to_mappings(mappings, check_service_t2(full_serv_id))
-            else:
-                pass
 
-    if TRAEFIK_URL:
+    if TRAEFIK_POLL_URL:
         logger.debug("Traefik List Discovery Loop")
         add_to_mappings(mappings, check_traefik(included_hosts, excluded_hosts))
 
@@ -428,15 +421,15 @@ if SWARM_MODE.lower() == "true":
 elif SWARM_MODE.lower() == "false":
     SWARM_MODE = False
 
-if TRAEFIK_MODE.lower() == "true":
-    TRAEFIK_MODE = True
-elif TRAEFIK_MODE.lower() == "false":
-    TRAEFIK_MODE = False
+if ENABLE_TRAEFIK_POLL.lower() == "true":
+    ENABLE_TRAEFIK_POLL = True
+elif ENABLE_TRAEFIK_POLL.lower() == "false":
+    ENABLE_TRAEFIK_POLL = False
 
 if DRY_RUN:
     logger.warning("Dry Run: %s", DRY_RUN)
 logger.debug("Swarm Mode: %s", SWARM_MODE)
-logger.debug("Traefik Mode: %s", TRAEFIK_MODE)
+logger.debug("Traefik Mode: %s", ENABLE_TRAEFIK_POLL)
 logger.debug("Refresh Entries: %s", REFRESH_ENTRIES)
 logger.debug("Traefik Version: %s", TRAEFIK_VERSION)
 logger.debug("Default TTL: %s", DEFAULT_TTL)
@@ -448,12 +441,12 @@ else:
     cf = CloudFlare.CloudFlare(debug=VERBOSE, email=email, token=token)
 
 
-if TRAEFIK_MODE:
-    if uri_valid(TRAEFIK_URL):
-        logger.debug("Traefik Url: %s", TRAEFIK_URL)
+if ENABLE_TRAEFIK_POLL:
+    if uri_valid(TRAEFIK_POLL_URL):
+        logger.debug("Traefik Poll Url: %s", TRAEFIK_POLL_URL)
         logger.debug("Traefik Poll Seconds: %s", TRAEFIK_POLL_SECONDS)
     else:
-        logger.error("Traefik Url invalid: %s", TRAEFIK_URL)
+        logger.error("Traefik Poll Url invalid: %s", TRAEFIK_POLL_URL)
 
 client = docker.from_env()
 
@@ -465,7 +458,7 @@ traefik_included_hosts, traefik_excluded_hosts = init_traefik_from_env()
 
 sync_mappings(get_initial_mappings(traefik_included_hosts, traefik_excluded_hosts), doms)
 
-if TRAEFIK_MODE:
+if ENABLE_TRAEFIK_POLL:
     logger.debug("Starting traefik router polling")
     traefik_poll = RepeatedTimer(TRAEFIK_POLL_SECONDS, check_traefik_and_sync_mappings, traefik_included_hosts, traefik_excluded_hosts, doms)
     atexit.register(traefik_poll.stop)
