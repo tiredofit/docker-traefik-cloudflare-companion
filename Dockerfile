@@ -2,7 +2,8 @@ FROM docker.io/tiredofit/alpine:3.15
 LABEL maintainer="Dave Conroy (github.com/tiredofit)"
 
 ### Set Environment Variables
-ENV CONTAINER_ENABLE_MESSAGING=FALSECONTAINER_ENABLE_MESSAGING=FALSE
+ENV CONTAINER_ENABLE_MESSAGING=FALSE
+ENV CONTAINER_ENABLE_SCHEDULING=FALSE
 
 ### Dependencies
 RUN set -x && \
@@ -38,6 +39,7 @@ RUN set -x && \
             cloudflare \
             get-docker-secret \
             docker[tls] \
+            requests \
             && \
     \
 ### Cleanup

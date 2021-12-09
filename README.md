@@ -114,6 +114,14 @@ Be sure to view the following repositories to understand all the customizable op
 | `DOCKER_TLS_VERIFY` | (optional) If using tcp conneciton to socket Verify TLS                                 | `1`                          |
 | `REFRESH_ENTRIES`   | If record exists, update entry with new values `TRUE` or `FALSE`                        | `TRUE`                       |
 | `SWARM_MODE`        | Enable Docker Swarm Mode `TRUE` or `FALSE`                                              | `FALSE`                      |
+| `TRAEFIK_MODE`      | Enable Traefik Polling Mode `TRUE` or `FALSE`                                           | `FALSE`                      |
+| `TRAEFIK_URL`       | (optional) If using Traefik Polling mode - URL to Traefik API endpoint                  |                              |
+| `TRAEFIK_POLL_SECONDS` | (optional) If using Traefik Polling mode - Seconds to delay between poll attemps     | `60`                         |
+| `TRAEFIK_INCLUDED_HOST1` | (optional) If using Traefik Polling mode - Regex patterns for hosts to include          | `.*`                         |
+| `TRAEFIK_INCLUDED_HOST...` | (optional traefik host include pattern 2 - N)                                           |                              |
+| `TRAEFIK_EXCLUDED_HOST1` | (optional) If using Traefik Polling mode - Regex patterns for hosts to exclude          |                              |
+| `TRAEFIK_EXCLUDED_HOST...` | (optional traefik host exclude pattern 2 - N)                                           |                              |
+| `DRY_RUN`           | Enable Dry Run Mode `TRUE` or `FALSE`                                                   | `FALSE`                      | 
 | `CF_EMAIL`          | Email address tied to Cloudflare Account - Leave Blank  for Scoped API                  |                              |
 | `CF_TOKEN`          | API Token for the Domain                                                                |                              |
 | `DEFAULT_TTL`       | TTL to apply to records                                                                 | `1`                          |
