@@ -171,7 +171,7 @@ The supported labels are:
 
 #### Traefik Polling
 
-Traefik Polling mode can be enabled by setting the environment variable `ENABLE_TRAEFIK_POLL=TRUE` and `TRAEFIK_POLL_URL=http://<host>:<port>`.  This will cause cloudflare-companion to poll Traefik every 60s (default) and discover routers and include hosts which match the following rules:
+Traefik Polling mode can be enabled by setting the environment variable `TRAEFIK_VERSION=2`, `ENABLE_TRAEFIK_POLL=TRUE`, and `TRAEFIK_POLL_URL=http://<host>:<port>`.  This will cause cloudflare-companion to poll Traefik every 60s (default) and discover routers and include hosts which match the following rules:
 
 1. Provider is not docker
 2. Status is enabled
@@ -193,17 +193,6 @@ Include patterns can be specified by defining one or more `TRAEFIK_INCLUDED_HOST
 ###### Exclude Patterns
 
 Exclude patterns can be specified by defining one or more `TRAEFIK_EXCLUDED_HOST<XXX>` variables such as `TRAEFIK_EXCLUDED_HOST1=private-data\.foobar\.com` and `TRAEFIK_EXCLUDED_HOST2=.*-internal-api\.foobar\.com`.  The pattern is a regular expression that is used to determine if the host should be excluded.  Exclude patterns filter out results after include patterns are executed.
-
-- Traefik 1.x
-````bash
-  - traefik.normal.frontend.rule=Host:example1.domain.tld,example2.domain.tld
-````
-
-- Traefik 2.x
-````bash
-  - traefik.http.routers.example.rule=Host(`example1.domain.tld`) || Host(`example2.domain.tld`)
-````
-
 
 ## Maintenance
 ### Shell Access
