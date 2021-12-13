@@ -2,18 +2,28 @@
 
 from __future__ import print_function
 from datetime import datetime
+
 from get_docker_secret import get_docker_secret
+import atexit
 import CloudFlare
 import docker
 import os
 import re
+import requests
 import logging
+import time
+import threading
+from urllib.parse import urlparse
 
 DEFAULT_TTL = os.environ.get('DEFAULT_TTL', "1")
 SWARM_MODE = os.environ.get('SWARM_MODE', "FALSE")
+ENABLE_TRAEFIK_POLL = os.environ.get('ENABLE_TRAEFIK_POLL', "FALSE")
 REFRESH_ENTRIES = os.environ.get('REFRESH_ENTRIES', "FALSE")
 TRAEFIK_VERSION = os.environ.get('TRAEFIK_VERSION', "2")
+TRAEFIK_POLL_URL = os.environ.get('TRAEFIK_POLL_URL', None)
+TRAEFIK_POLL_SECONDS = int(os.environ.get('TRAEFIK_POLL_SECONDS', "60"))
 CONTAINER_LOG_LEVEL = os.environ.get('CONTAINER_LOG_LEVEL', "INFO")
+DRY_RUN = os.environ.get('DRY_RUN', "FALSE")
 
 # set up logging
 logger = logging.getLogger(__name__)
@@ -33,6 +43,36 @@ ch = logging.StreamHandler()
 formatter = logging.Formatter('[%(levelname)s] %(message)s')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
+
+synced_mappings = {}
+
+
+class RepeatedTimer(object):
+    def __init__(self, interval, function, *args, **kwargs):
+        self._timer = None
+        self.interval = interval
+        self.function = function
+        self.args = args
+        self.kwargs = kwargs
+        self.is_running = False
+        self.next_call = time.time()
+        self.start()
+
+    def _run(self):
+        self.is_running = False
+        self.start()
+        self.function(*self.args, **self.kwargs)
+
+    def start(self):
+        if not self.is_running:
+            self.next_call += self.interval
+            self._timer = threading.Timer(self.next_call - time.time(), self._run)
+            self._timer.start()
+            self.is_running = True
+
+    def stop(self):
+        self._timer.cancel()
+        self.is_running = False
 
 
 def init_doms_from_env():
@@ -65,7 +105,36 @@ def init_doms_from_env():
     return doms
 
 
-def isExcluded(name, dom):
+def init_traefik_from_env():
+    TRAEFIK_INCLUDED_HOST = re.compile('^TRAEFIK_INCLUDED_HOST[0-9]+$', re.IGNORECASE)
+    TRAEFIK_EXCLUDED_HOST = re.compile('^TRAEFIK_EXCLUDED_HOST[0-9]+$', re.IGNORECASE)
+
+    traefik_included_hosts = list()
+    traefik_excluded_hosts = list()
+    for k in os.environ:
+        if TRAEFIK_INCLUDED_HOST.match(k):
+            traefik_included_hosts.append(re.compile(os.environ.get(k)))
+
+        if TRAEFIK_EXCLUDED_HOST.match(k):
+            traefik_excluded_hosts.append(re.compile(os.environ.get(k)))
+
+    if len(traefik_included_hosts) > 0:
+        logger.debug("Traefik Host Includes")
+        for traefik_included_host in traefik_included_hosts:
+            logger.debug("  %s", traefik_included_host.pattern)
+    else:
+        logger.debug("Traefik Host Includes: .*")
+        traefik_included_hosts.append(re.compile(".*"))
+
+    if len(traefik_excluded_hosts) > 0:
+        logger.debug("Traefik Host Excludes")
+        for traefik_excluded_host in traefik_excluded_hosts:
+            logger.debug("  %s", traefik_excluded_host.pattern)
+
+    return traefik_included_hosts, traefik_excluded_hosts
+
+
+def is_domain_excluded(name, dom):
     excluded_sub_domains = dom['excluded_sub_domains']
 
     for sub_dom in excluded_sub_domains:
@@ -79,44 +148,65 @@ def isExcluded(name, dom):
             return False
 
 
-def point_domain(name, doms):
-    for dom in doms:
-        if name == dom['target_domain']:
+def is_matching(host, regexes):
+    for regex in regexes:
+        if regex.search(host):
+            return True
+    return False
+
+
+def point_domain(name, domain_infos):
+    ok = True
+    for domain_info in domain_infos:
+        if name == domain_info['target_domain']:
             continue
 
-        if name.find(dom['name']) >= 0:
-            if isExcluded(name, dom):
+        if name.find(domain_info['name']) >= 0:
+            if is_domain_excluded(name, domain_info):
                 continue
 
-            records = cf.zones.dns_records.get(dom['zone_id'], params={u'name': name})
+            records = cf.zones.dns_records.get(domain_info['zone_id'], params={u'name': name})
             data = {
                 u'type': u'CNAME',
                 u'name': name,
-                u'content': dom['target_domain'],
-                u'ttl': dom['ttl'],
-                u'proxied': dom['proxied']
+                u'content': domain_info['target_domain'],
+                u'ttl': domain_info['ttl'],
+                u'proxied': domain_info['proxied']
             }
             if REFRESH_ENTRIES:
                 try:
                     if len(records) == 0:
-                        r = cf.zones.dns_records.post(dom['zone_id'], data=data)
-                        logger.info("Created new record: %s to point to %s", name, dom['target_domain'])
+                        if DRY_RUN:
+                            logger.info("DRY-RUN: POST to Cloudflare %s:, %s", domain_info['zone_id'], data)
+                        else:
+                            _ = cf.zones.dns_records.post(domain_info['zone_id'], data=data)
+                        logger.info("Created new record: %s to point to %s", name, domain_info['target_domain'])
                     else:
                         for record in records:
-                            cf.zones.dns_records.put(dom['zone_id'], record["id"], data=data)
-                            logger.info("Updated existing record: %s to point to %s", name, dom['target_domain'])
-                except CloudFlare.exceptions.CloudFlareAPIError as e:
+                            if DRY_RUN:
+                                logger.info("DRY-RUN: PUT to Cloudflare %s, %s:, %s", domain_info['zone_id'], record["id"], data)
+                            else:
+                                cf.zones.dns_records.put(domain_info['zone_id'], record["id"], data=data)
+                            logger.info("Updated existing record: %s to point to %s", name, domain_info['target_domain'])
+                except CloudFlare.exceptions.CloudFlareAPIError as ex:
+                    logger.error('** %s - %d %s' % (name, ex, ex))
+                    ok = False
                     pass
             else:
                 try:
-                    r = cf.zones.dns_records.post(dom['zone_id'], data=data)
-                    logger.info("Created new record: %s to point to %s", name, dom['target_domain'])
+                    if DRY_RUN:
+                        logger.info("DRY-RUN: POST to Cloudflare %s:, %s", domain_info['zone_id'], data)
+                    else:
+                        _ = cf.zones.dns_records.post(domain_info['zone_id'], data=data)
+                    logger.info("Created new record: %s to point to %s", name, domain_info['target_domain'])
+                except CloudFlare.exceptions.CloudFlareAPIError as ex:
+                    logger.error('** %s - %d %s' % (name, ex, ex))
+                    ok = False
+    return ok
 
-                except CloudFlare.exceptions.CloudFlareAPIError as e:
-                    logger.error('** %s - %d %s' % (name, e, e))
 
-
-def check_container_t1(c, doms):
+def check_container_t1(c):
+    mappings = {}
     logger.debug("Called check_container_t1 for: %s", c)
     cont_id = c.attrs.get(u'Id')
     for prop in c.attrs.get(u'Config').get(u'Labels'):
@@ -128,15 +218,17 @@ def check_container_t1(c, doms):
                 if ',' in value:
                     for v in value.split(","):
                         logger.info("Found Container ID: %s with Multi-Hostname %s", cont_id, v)
-                        point_domain(v, doms)
+                        mappings[v] = 1
                 else:
                     logger.info("Found Container ID: %s with Hostname %s", cont_id, value)
-                    point_domain(value, doms)
+                    mappings[value] = 1
             else:
                 pass
+    return mappings
 
 
-def check_service_t1(s, doms):
+def check_service_t1(s):
+    mappings = {}
     logger.debug("Called check_service_t1 for: %s", s)
     cont_id = s
     s = client.services.get(s)
@@ -149,36 +241,40 @@ def check_service_t1(s, doms):
                 if ',' in value:
                     for v in value.split(","):
                         logger.info("Found Service ID: %s with Multi-Hostname %s", cont_id, v)
-                        point_domain(v, doms)
+                        mappings[v] = 1
                 else:
                     logger.info("Found Service ID: %s with Hostname %s", cont_id, value)
-                    point_domain(value, doms)
+                    mappings[value] = 1
             else:
                 pass
+    return mappings
 
 
-def check_container_t2(c, doms):
+def check_container_t2(c):
+    mappings = {}
     logger.debug("Called check_container_t2 for: %s", c)
     cont_id = c.attrs.get(u'Id')
     for prop in c.attrs.get(u'Config').get(u'Labels'):
         value = c.attrs.get(u'Config').get(u'Labels').get(prop)
         if re.match('traefik.*?\.rule', prop):
             if 'Host' in value:
-                logger.debug("Container ID: %s rule value:%s", cont_id, value)
+                logger.debug("Container ID: %s rule value: %s", cont_id, value)
                 extracted_domains = re.findall(r'\`([a-zA-Z0-9\.\-]+)\`', value)
                 logger.debug("Container ID: %s extracted domains from rule: %s", cont_id, extracted_domains)
                 if len(extracted_domains) > 1:
                     for v in extracted_domains:
                         logger.info("Found Service ID: %s with Multi-Hostname %s", cont_id, v)
-                        point_domain(v, doms)
+                        mappings[v] = 1
                 elif len(extracted_domains) == 1:
                     logger.info("Found Service ID: %s with Hostname %s", cont_id, extracted_domains[0])
-                    point_domain(extracted_domains[0], doms)
+                    mappings[extracted_domains[0]] = 1
             else:
                 pass
+    return mappings
 
 
-def check_service_t2(s, doms):
+def check_service_t2(s):
+    mappings = {}
     logger.debug("Called check_service_t2 for: %s", s)
     cont_id = s
     s = client.services.get(s)
@@ -192,40 +288,106 @@ def check_service_t2(s, doms):
                 if len(extracted_domains) > 1:
                     for v in extracted_domains:
                         logger.info("Found Service ID: %s with Multi-Hostname %s", cont_id, v)
-                        point_domain(v, doms)
+                        mappings[v] = 1
                 elif len(extracted_domains) == 1:
                     logger.info("Found Service ID: %s with Hostname %s", cont_id, extracted_domains[0])
-                    point_domain(extracted_domains[0], doms)
+                    mappings[extracted_domains[0]] = 1
             else:
                 pass
+    return mappings
 
 
-def init(doms):
+def check_traefik(included_hosts, excluded_hosts):
+    mappings = {}
+    logger.debug("Called check_traefik")
+    if TRAEFIK_VERSION == "2":
+        r = requests.get("{}/api/http/routers".format(TRAEFIK_POLL_URL))
+        if r.ok:
+            for router in r.json():
+                if "status" in router and router["status"] == "enabled":
+                    if "provider" in router and router["provider"] != "docker":
+                        if "name" in router and "rule" in router:
+                            name = router["name"]
+                            value = router["rule"]
+                            if 'Host' in value:
+                                logger.debug("Traefik Router Name: %s rule value: %s", name, value)
+                                extracted_domains = re.findall(r'Host\(\`([a-zA-Z0-9\.\-]+)\`\)', value)
+                                logger.debug("Traefik Router Name: %s extracted domains from rule: %s", name, extracted_domains)
+                                if len(extracted_domains) > 1:
+                                    for v in extracted_domains:
+                                        if is_matching(v, included_hosts):
+                                            if is_matching(v, excluded_hosts):
+                                                logger.debug("Traefik Router Name: %s with Multi-Hostname %s - Matched Exclude", name, v)
+                                            else:
+                                                logger.info("Found Traefik Router Name: %s with Multi-Hostname %s", name, v)
+                                                mappings[v] = 2
+                                        else:
+                                            logger.debug("Traefik Router Name: %s with Multi-Hostname %s: Not Match Include", name, v)
+                                elif len(extracted_domains) == 1:
+                                    if is_matching(extracted_domains[0], included_hosts):
+                                        if is_matching(extracted_domains[0], excluded_hosts):
+                                            logger.debug("Traefik Router Name: %s with Hostname %s - Matched Exclude", name, extracted_domains[0])
+                                        else:
+                                            logger.info("Found Traefik Router Name: %s with Hostname %s", name, extracted_domains[0])
+                                            mappings[extracted_domains[0]] = 2
+                                    else:
+                                        logger.debug("Traefik Router Name: %s with Hostname %s: Not Match Include", name, extracted_domains[0])
+
+    return mappings
+
+
+def check_traefik_and_sync_mappings(included_hosts, excluded_hosts, domain_infos):
+    sync_mappings(check_traefik(included_hosts, excluded_hosts),domain_infos)
+
+
+def add_to_mappings(current_mappings, mappings):
+    for k, v in mappings.items():
+        current_mapping = current_mappings.get(k)
+        if current_mapping is None or current_mapping > v:
+            current_mappings[k] = v
+
+
+def sync_mappings(mappings, domain_infos):
+    for k, v in mappings.items():
+        current_mapping = synced_mappings.get(k)
+        if current_mapping is None or current_mapping > v:
+            if point_domain(k, domain_infos):
+                synced_mappings[k] = v
+
+
+def get_initial_mappings(included_hosts, excluded_hosts):
     logger.debug("Starting Initialization Routines")
 
+    mappings = {}
     for c in client.containers.list():
         logger.debug("Container List Discovery Loop")
         if TRAEFIK_VERSION == "1":
-            check_container_t1(c, doms)
+            add_to_mappings(mappings, check_container_t1(c))
         elif TRAEFIK_VERSION == "2":
-            check_container_t2(c, doms)
+            add_to_mappings(mappings, check_container_t2(c))
 
     if SWARM_MODE:
         logger.debug("Service List Discovery Loop")
         for s in api.services():
             full_serv_id = s["ID"]
-            short_serv_id = full_serv_id[:10]
-            serv_id = "<Service: " + short_serv_id + ">"
-            cont = str(api.containers(quiet=1, filters={'label': 'com.docker.swarm.service.id=' + full_serv_id}))
-            full_cont_id = cont[9:-4]
-            short_cont_id = full_cont_id[:10]
-            cont_id = "<Container: " + short_cont_id + ">"
             if TRAEFIK_VERSION == "1":
-                check_service_t1(full_serv_id, doms)
+                add_to_mappings(mappings, check_service_t1(full_serv_id))
             elif TRAEFIK_VERSION == "2":
-                check_service_t2(full_serv_id, doms)
-            else:
-                pass
+                add_to_mappings(mappings, check_service_t2(full_serv_id))
+
+    if TRAEFIK_POLL_URL:
+        logger.debug("Traefik List Discovery Loop")
+        add_to_mappings(mappings, check_traefik(included_hosts, excluded_hosts))
+
+    return mappings
+
+
+def uri_valid(x):
+    try:
+        result = urlparse(x)
+        return all([result.scheme, result.netloc])
+    except:
+        return False
 
 
 try:
@@ -245,6 +407,11 @@ try:
 except KeyError as e:
     exit("ERROR: {} not defined".format(e))
 
+if DRY_RUN.lower() == "true":
+    DRY_RUN = True
+elif DRY_RUN.lower() == "false":
+    DRY_RUN = False
+
 if REFRESH_ENTRIES.lower() == "true":
     REFRESH_ENTRIES = True
 elif REFRESH_ENTRIES.lower() == "false":
@@ -255,6 +422,13 @@ if SWARM_MODE.lower() == "true":
 elif SWARM_MODE.lower() == "false":
     SWARM_MODE = False
 
+if ENABLE_TRAEFIK_POLL.lower() == "true":
+    ENABLE_TRAEFIK_POLL = True
+elif ENABLE_TRAEFIK_POLL.lower() == "false":
+    ENABLE_TRAEFIK_POLL = False
+
+if DRY_RUN:
+    logger.warning("Dry Run: %s", DRY_RUN)
 logger.debug("Swarm Mode: %s", SWARM_MODE)
 logger.debug("Refresh Entries: %s", REFRESH_ENTRIES)
 logger.debug("Traefik Version: %s", TRAEFIK_VERSION)
@@ -266,14 +440,35 @@ else:
     logger.debug("API Mode: Global")
     cf = CloudFlare.CloudFlare(debug=VERBOSE, email=email, token=token)
 
+
+if ENABLE_TRAEFIK_POLL:
+    if TRAEFIK_VERSION == "2":
+        if uri_valid(TRAEFIK_POLL_URL):
+            logger.debug("Traefik Poll Url: %s", TRAEFIK_POLL_URL)
+            logger.debug("Traefik Poll Seconds: %s", TRAEFIK_POLL_SECONDS)
+        else:
+            ENABLE_TRAEFIK_POLL = False
+            logger.error("Traefik Polling Mode disabled because traefik url is invalid: %s", TRAEFIK_POLL_URL)
+    else:
+        ENABLE_TRAEFIK_POLL = False
+        logger.error("Traefik Polling Mode disabled because traefik version is not 2")
+
+logger.debug("Traefik Polling Mode: %s", False)
+
 client = docker.from_env()
 
 if SWARM_MODE:
     api = docker.APIClient()
 
 doms = init_doms_from_env()
+traefik_included_hosts, traefik_excluded_hosts = init_traefik_from_env()
 
-init(doms)
+sync_mappings(get_initial_mappings(traefik_included_hosts, traefik_excluded_hosts), doms)
+
+if ENABLE_TRAEFIK_POLL:
+    logger.debug("Starting traefik router polling")
+    traefik_poll = RepeatedTimer(TRAEFIK_POLL_SECONDS, check_traefik_and_sync_mappings, traefik_included_hosts, traefik_excluded_hosts, doms)
+    atexit.register(traefik_poll.stop)
 
 logger.debug("Starting event watch routines")
 
@@ -282,17 +477,17 @@ t = datetime.now().strftime("%s")
 logger.debug("Time: %s", t)
 
 for event in client.events(since=t, filters={'Type': 'service', 'Action': u'update', 'status': u'start'}, decode=True):
-
+    new_mappings = {}
     if event.get(u'status') == u'start':
         try:
             if TRAEFIK_VERSION == "1":
-                check_container_t1(client.containers.get(event.get(u'id')), doms)
+                add_to_mappings(new_mappings, check_container_t1(client.containers.get(event.get(u'id'))))
                 if SWARM_MODE:
-                    check_service_t1(client.services.get(event.get(u'id')), doms)
+                    add_to_mappings(new_mappings, check_service_t1(client.services.get(event.get(u'id'))))
             elif TRAEFIK_VERSION == "2":
-                check_container_t2(client.containers.get(event.get(u'id')), doms)
+                add_to_mappings(new_mappings, check_container_t2(client.containers.get(event.get(u'id'))))
                 if SWARM_MODE:
-                    check_service_t2(client.services.get(event.get(u'id')), doms)
+                    add_to_mappings(new_mappings, check_service_t2(client.services.get(event.get(u'id'))))
 
         except docker.errors.NotFound as e:
             pass
@@ -303,12 +498,14 @@ for event in client.events(since=t, filters={'Type': 'service', 'Action': u'upda
                 if TRAEFIK_VERSION == "1":
                     node_id = event.get(u'Actor').get(u'ID')
                     logger.debug("Detected Update on node: %s", node_id)
-                    check_service_t1(node_id, doms)
+                    add_to_mappings(new_mappings, check_service_t1(node_id))
                 elif TRAEFIK_VERSION == "2":
                     node_id = event.get(u'Actor').get(u'ID')
                     service_id = client.services.list()
                     logger.debug("Detected Update on node: %s", node_id)
-                    check_service_t2(node_id, doms)
+                    add_to_mappings(new_mappings, check_service_t2(node_id))
 
             except docker.errors.NotFound as e:
                 pass
+
+    sync_mappings(new_mappings, doms)
