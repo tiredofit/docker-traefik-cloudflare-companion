@@ -1,3 +1,9 @@
+## 6.8.1 2021-12-13 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Drop Arm v7 version temporarily related to: https://github.com/pyca/cryptography/issues/6673
+
+
 ## 6.8.0 2021-12-13 <kadaan at github>
 
    ### Added
