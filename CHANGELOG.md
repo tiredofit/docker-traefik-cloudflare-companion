@@ -1,3 +1,12 @@
+## 6.8.0 2021-12-13 <kadaan at github>
+
+   ### Added
+      - Support Dynamic Configuration / External Services
+      - Dry Run Support
+
+   ### Changed
+      - Optimized Matching rules
+
 ## 6.7.0 2021-11-24 <dave at tiredofit dot ca>
 
    ### Added
