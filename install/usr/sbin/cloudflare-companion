@@ -389,11 +389,27 @@ def uri_valid(x):
     except:
         return False
 
+def get_secret_by_env(envvar_name):
+    secret_value:str
+    envvar_secret_name=envvar_name + "_FILE"
+    envvar_secret_value=os.getenv(envvar_secret_name)
+    if envvar_secret_value:
+        secret_value = get_docker_secret(envvar_secret_value, secrets_dir='/', autocast_name=False, getenv=False)
+    else:
+        # fallback check for original environment variable
+        secret_value = get_docker_secret(envvar_name, autocast_name=False, getenv=True)
+    if secret_value:
+        logger.debug("Setting environment variable '%s' by docker secret '%s'.", envvar_name, envvar_secret_name)
+        os.environ[envvar_name] = secret_value
+        return secret_value
 
 try:
     # Check for uppercase docker secrets or env variables
-    email = get_docker_secret('CF_EMAIL', autocast_name=False, getenv=True)
-    token = get_docker_secret('CF_TOKEN', autocast_name=False, getenv=True)
+    email = get_envBySecret('CF_EMAIL')
+    token = get_envBySecret('CF_TOKEN')
+
+    get_envBySecret('DOMAIN1_ZONE_ID')
+    get_envBySecret('DOMAIN2_ZONE_ID')
 
     # Check for lowercase docker secrets
     if not email:
