@@ -2,8 +2,10 @@ FROM docker.io/tiredofit/alpine:3.15
 LABEL maintainer="Dave Conroy (github.com/tiredofit)"
 
 ### Set Environment Variables
-ENV CONTAINER_ENABLE_MESSAGING=FALSE
-ENV CONTAINER_ENABLE_SCHEDULING=FALSE
+ENV CONTAINER_ENABLE_MESSAGING=FALSE \
+    CONTAINER_ENABLE_SCHEDULING=FALSE \
+    IMAGE_NAME="tiredofit/traefik-cloudflare-companion" \
+    IMAGE_REPO_URL="https://github.com/tiredofit/docker-traefik-cloudflare-companion/"
 
 ### Dependencies
 RUN set -x && \
