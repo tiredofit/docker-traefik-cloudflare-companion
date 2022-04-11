@@ -89,7 +89,7 @@ For those wishing to assign multiple CNAMEs to a container use the following for
 ### Persistent Storage
 | File                   | Description                                                              |
 | ---------------------- | ------------------------------------------------------------------------ |
-| `/var/run/docker.sock` | You must have access to the docker socket in order to utilize this image |
+| `/var/run/docker.sock` | Required by default unless you set `DOCKER_MODE=FALSE` |
 
 * * *
 ### Environment Variables
@@ -108,6 +108,7 @@ Be sure to view the following repositories to understand all the customizable op
 | Parameter           | Description                                                                             | Default                      |
 | ------------------- | --------------------------------------------------------------------------------------- | ---------------------------- |
 | `TRAEFIK_VERSION`   | What version of Traefik do you want to work against - `1` or `2`                        | `2`                          |
+| `DOCKER_MODE`       | Set this to `FALSE` if you don't have `/var/run/docker.sock` (Kubernetes for example)    | `TRUE`                       | 
 | `DOCKER_ENTRYPOINT` | Docker Entrypoint default (local mode)                                                  | `unix://var/run/docker.sock` |
 | `DOCKER_HOST`       | (optional) If using tcp connection e.g. `tcp://111.222.111.32:2376`                     |                              |
 | `DOCKER_CERT_PATH`  | (optional) If using tcp connection with TLS - Certificate location e.g. `/docker-certs` |                              |
@@ -169,6 +170,13 @@ The supported labels are:
 | 1                | `traefik.normal.frontend.rule=Host:example1.domain.tld` | `traefik.normal.frontend.rule=Host:example1.domain.tld,example2.domain.tld` |
 | 2                | ``traefik.http.routers.example.rule=Host(`example1.domain.tld`)`` | ``traefik.http.routers.example.rule=Host(`example1.domain.tld`) || Host(`example2.domain.tld`)`` |
 
+### Kubernetes:
+
+To work with kubernetes, you'll need to set `DOCKER_MODE=FALSE` and `ENABLE_TRAEFIK_POLL=TRUE`. This will disable the default docker code and instead only rely on traefik polling.
+
+You can deploy this container as a sidecar by adding it to `deployment.additionalContainers` in the traefik helm chart values.yaml. ([example](https://gist.github.com/ZackMitkin/edaf3132baf43098ae01563bda924e72))
+
+
 #### Traefik Polling
 
 Traefik Polling mode can be enabled by setting the environment variable `TRAEFIK_VERSION=2`, `ENABLE_TRAEFIK_POLL=TRUE`, and `TRAEFIK_POLL_URL=http://<host>:<port>`.  This will cause cloudflare-companion to poll Traefik every 60s (default) and discover routers and include hosts which match the following rules:
@@ -181,6 +189,7 @@ Traefik Polling mode can be enabled by setting the environment variable `TRAEFIK
 6. Host does not match exclude patterns (default: none)
 
 The polling interval can be configured by setting the environment variable `TRAEFIK_POLL_SECONDS=120`.
+
 
 ##### Filtering
 
