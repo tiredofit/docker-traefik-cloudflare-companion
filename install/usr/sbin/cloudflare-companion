@@ -144,8 +144,8 @@ def is_domain_excluded(name, dom):
         if name.find(fqdn_with_sub_dom) != -1:
             logger.info('Ignoring %s because it falls until excluded sub domain: %s', name, sub_dom)
             return True
-        else:
-            return False
+
+    return False
 
 
 def is_matching(host, regexes):
