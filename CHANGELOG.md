@@ -1,3 +1,9 @@
+## 6.8.4 2022-05-24 <cford1080@github>
+
+   ### Changed
+      - Fix bug affecting multiple excluded domains
+
+
 ## 6.8.3 2022-02-09 <dave at tiredofit dot ca>
 
    ### Changed
