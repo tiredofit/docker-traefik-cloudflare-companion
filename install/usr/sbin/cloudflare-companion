@@ -269,22 +269,22 @@ def check_domain_labels(c, d, t):
         if 'cloudflare.content' == prop and config['content'] == '':
             config.update({'content': value})
 
-        if ("cloudflare."+d+".type") == prop and config['record_type'] == '':
+        if ("cloudflare."+d+".type") == prop:
             config.update({'record_type': value})
 
-        if ("cloudflare."+d+".refresh-entries") == prop and config['refresh_entries'] == '':
+        if ("cloudflare."+d+".refresh-entries") == prop:
             config.update({'refresh_entries': bool(value)})
 
-        if ("cloudflare."+d+".proxied") == prop and config['proxied'] == '':
+        if ("cloudflare."+d+".proxied") == prop:
             config.update({'proxied': bool(value)})
 
-        if ("cloudflare."+d+".content") == prop and config['content'] == '':
+        if ("cloudflare."+d+".content") == prop:
             config.update({'content': value})
 
-        if ("cloudflare."+d+".zone-id") == prop and config['zone_id'] == '':
+        if ("cloudflare."+d+".zone-id") == prop:
             config.update({'zone_id': value})
 
-        if ("cloudflare."+d+".ttl") == prop and config['ttl'] == '':
+        if ("cloudflare."+d+".ttl") == prop:
             config.update({'ttl': value})
     
 
