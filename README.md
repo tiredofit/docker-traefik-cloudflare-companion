@@ -181,7 +181,7 @@ cloudflare.{domain}.proxied - Define if is proxied
 
 cloudflare.{domain}.content - Record content
 
-cloudflare.{domain}.ttt - TTL
+cloudflare.{domain}.ttl - TTL
 
 ```
 ## Replace env settings and global service settings
@@ -189,6 +189,7 @@ cloudflare.{domain}.ttt - TTL
 - cloudflare.joblist.ersolucoesweb.com.br.type=A
 - cloudflare.joblist.ersolucoesweb.com.br.content=127.0.0.1
 - cloudflare.joblist.ersolucoesweb.com.br.proxied=false
+- cloudflare.joblist.ersolucoesweb.com.br.refresh-entries=true
 ```
 #### Docker
 
