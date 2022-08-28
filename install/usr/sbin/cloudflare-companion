@@ -255,7 +255,7 @@ def check_domain_labels(c, d, t):
             config.update({'record_type': value})
                 
         if 'cloudflare.refresh-entries' == prop and config['refresh_entries'] == '':
-            config.update({'refresh_entries': bool(value)})
+            config.update({'refresh_entries': str(value).lower() == 'true'})
 
         if 'cloudflare.zone-id' == prop and config['zone_id'] == '':
             config.update({'zone_id': value})
@@ -264,7 +264,7 @@ def check_domain_labels(c, d, t):
             config.update({'ttl': value})
 
         if 'cloudflare.proxied' == prop and config['proxied'] == '':
-            config.update({'proxied': bool(value)})
+            config.update({'proxied': str(value).lower() == 'true'})
             
         if 'cloudflare.content' == prop and config['content'] == '':
             config.update({'content': value})
@@ -273,10 +273,10 @@ def check_domain_labels(c, d, t):
             config.update({'record_type': value})
 
         if ("cloudflare."+d+".refresh-entries") == prop:
-            config.update({'refresh_entries': bool(value)})
+            config.update({'refresh_entries': str(value).lower() == 'true'})
 
         if ("cloudflare."+d+".proxied") == prop:
-            config.update({'proxied': bool(value)})
+            config.update({'proxied': str(value).lower() == 'true'})
 
         if ("cloudflare."+d+".content") == prop:
             config.update({'content': value})
@@ -302,6 +302,7 @@ def check_domain_labels(c, d, t):
         config.update({'proxied': True})
     if (config['refresh_entries'] == ''):
         config.update({'refresh_entries': True})
+
 
     return config
 
