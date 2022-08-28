@@ -214,93 +214,6 @@ def point_domain(name, domain_info):
                     ok = False
     return ok
 
-def check_domain_labels(c, d, t):
-    config = {
-        "zone_id": "",
-        "target_domain": "",
-        "refresh_entries": "",
-        "proxied": "",
-        "record_type": "",
-        "refresh_entries": "",
-        "ttl": ""
-    }
-
-    if('check_container_t1' == t):
-        labels = c.attrs.get(u'Config').get(u'Labels')
-    elif('check_service_t1' == t):
-        labels = c.attrs.get(u'Spec').get(u'TaskTemplate').get(u'ContainerSpec').get(u'Labels')
-    elif('check_container_t2' == t):
-        labels = c.attrs.get(u'Config').get(u'Labels')
-    elif('check_service_t2' == t):
-        labels = c.attrs.get(u'Spec').get(u'Labels')
-
-    doms = init_doms_from_env()
-
-    if(d in doms):
-        config = {**doms[d], **config}
-
-    for prop in labels:
-        if('check_container_t1' == t):
-            value = c.attrs.get(u'Config').get(u'Labels').get(prop)
-        elif('check_service_t1' == t):
-            value = c.attrs.get(u'Spec').get(u'TaskTemplate').get(u'ContainerSpec').get(u'Labels').get(prop)
-        elif('check_container_t2' == t):
-            value = c.attrs.get(u'Config').get(u'Labels').get(prop)
-        elif('check_service_t2' == t):
-            value = c.attrs.get(u'Spec').get(u'Labels').get(prop)
-
-        
-        if 'cloudflare.type' == prop and config['record_type'] == '':
-            config.update({'record_type': value})
-                
-        if 'cloudflare.refresh-entries' == prop and config['refresh_entries'] == '':
-            config.update({'refresh_entries': bool(value)})
-
-        if 'cloudflare.zone-id' == prop and config['zone_id'] == '':
-            config.update({'zone_id': value})
-
-        if 'cloudflare.ttl' == prop and config['ttl'] == '':
-            config.update({'ttl': value})
-
-        if 'cloudflare.proxied' == prop and config['proxied'] == '':
-            config.update({'proxied': bool(value)})
-            
-        if 'cloudflare.target-domain' == prop and config['target_domain'] == '':
-            config.update({'target_domain': value})
-
-        if ("cloudflare."+d+".type") == prop and config['record_type'] == '':
-            config.update({'record_type': value})
-
-        if ("cloudflare."+d+".refresh-entries") == prop and config['refresh_entries'] == '':
-            config.update({'refresh_entries': bool(value)})
-
-        if ("cloudflare."+d+".proxied") == prop and config['proxied'] == '':
-            config.update({'proxied': bool(value)})
-
-        if ("cloudflare."+d+".target-domain") == prop and config['target_domain'] == '':
-            config.update({'target_domain': value})
-
-        if ("cloudflare."+d+".zone-id") == prop and config['zone_id'] == '':
-            config.update({'zone_id': value})
-
-        if ("cloudflare."+d+".ttl") == prop and config['ttl'] == '':
-            config.update({'ttl': value})
-
-    if ('ZONE_ID' in os.environ) and (config['zone_id'] == ''):
-        config.update({'zone_id': os.environ['ZONE_ID']})
-    if ('TARGET_DOMAIN' in os.environ) and (config['target_domain'] == ''):
-        config.update({'target_domain': os.environ['TARGET_DOMAIN']})
-    if ('REFRESH_ENTRIES' in os.environ) and (config['refresh_entries'] == ''):
-        config.update({'refresh_entries': os.environ['REFRESH_ENTRIES']})
-    if ('PROXIED' in os.environ) and (config['proxied'] == ''):
-        config.update({'proxied': os.environ['PROXIED']})
-    if (config['record_type'] == ''):
-        config.update({'record_type': 'CNAME'})
-    if (config['proxied'] == ''):
-        config.update({'proxied': True})
-    if (config['refresh_entries'] == ''):
-        config.update({'refresh_entries': True})
-    return config
 
 def check_container_t1(c):
     mappings = {}
@@ -315,10 +228,12 @@ def check_container_t1(c):
                 if ',' in value:
                     for v in value.split(","):
                         logger.info("Found Container ID: %s with Multi-Hostname %s", cont_id, v)
-                        mappings[v] = 1
+                        config = check_domain_labels(c, v, 'check_container_t1')
+                        mappings[v] = config
                 else:
                     logger.info("Found Container ID: %s with Hostname %s", cont_id, value)
-                    mappings[value] = 1
+                    config = check_domain_labels(c, value, 'check_container_t1')
+                    mappings[value] = config
             else:
                 pass
     return mappings
@@ -338,10 +253,11 @@ def check_service_t1(s):
                 if ',' in value:
                     for v in value.split(","):
                         logger.info("Found Service ID: %s with Multi-Hostname %s", cont_id, v)
-                        mappings[v] = 1
+                        config = check_domain_labels(s, v, 'check_service_t1')
+                        mappings[v] = config
                 else:
                     logger.info("Found Service ID: %s with Hostname %s", cont_id, value)
-                    mappings[value] = 1
+                    mappings[value] = config
             else:
                 pass
     return mappings
@@ -361,10 +277,12 @@ def check_container_t2(c):
                 if len(extracted_domains) > 1:
                     for v in extracted_domains:
                         logger.info("Found Service ID: %s with Multi-Hostname %s", cont_id, v)
-                        mappings[v] = 1
+                        config = check_domain_labels(c, v, 'check_container_t2')
+                        mappings[v] = config
                 elif len(extracted_domains) == 1:
                     logger.info("Found Service ID: %s with Hostname %s", cont_id, extracted_domains[0])
-                    mappings[extracted_domains[0]] = 1
+                    config = check_domain_labels(c, value, 'check_container_t2')
+                    mappings[extracted_domains[0]] = config
             else:
                 pass
     return mappings
@@ -385,10 +303,12 @@ def check_service_t2(s):
                 if len(extracted_domains) > 1:
                     for v in extracted_domains:
                         logger.info("Found Service ID: %s with Multi-Hostname %s", cont_id, v)
-                        mappings[v] = 1
+                        config = check_domain_labels(s, v, 'check_service_t2')
+                        mappings[v] = config
                 elif len(extracted_domains) == 1:
                     logger.info("Found Service ID: %s with Hostname %s", cont_id, extracted_domains[0])
-                    mappings[extracted_domains[0]] = 1
+                    config = check_domain_labels(s, extracted_domains[0], 'check_service_t2')
+                    mappings[extracted_domains[0]] = config
             else:
                 pass
     return mappings
@@ -440,16 +360,21 @@ def check_traefik_and_sync_mappings(included_hosts, excluded_hosts, domain_infos
 def add_to_mappings(current_mappings, mappings):
     for k, v in mappings.items():
         current_mapping = current_mappings.get(k)
-        if current_mapping is None or current_mapping > v:
-            current_mappings[k] = v
+        if current_mapping is None or len(current_mapping) < len(mappings[k]):
+            current_mappings[k] = mappings[k]
 
 
 def sync_mappings(mappings, domain_infos):
     for k, v in mappings.items():
         current_mapping = synced_mappings.get(k)
-        if current_mapping is None or current_mapping > v:
-            if point_domain(k, domain_infos):
-                synced_mappings[k] = v
+        if current_mapping is None or len(current_mapping) < len(mappings[k]):
+            if len(mappings[k]) > 0:
+                if(k in domain_infos):
+                    mappings[k] = {**domain_infos[k], **mappings[k]}
+                else:
+                    mappings[k]['excluded_sub_domains'] = []
+                if point_domain(k, mappings[k]):
+                    synced_mappings[k] = mappings[k]
 
 
 def get_initial_mappings(included_hosts, excluded_hosts):
