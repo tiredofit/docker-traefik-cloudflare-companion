@@ -176,6 +176,9 @@ def point_domain(name, domain_info):
 
     content = domain_info['content']
 
+    if(domain_info['ttl'] == ''):
+        domain_info['ttl'] = 15000
+
     data = {
         u'type': record_type,
         u'name': name,
