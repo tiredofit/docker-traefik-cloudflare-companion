@@ -1,3 +1,9 @@
+## 6.8.6 2022-08-27 <contato at ersolucoesweb dot com dot br>
+
+   ### Added
+      - Labels to control records
+
+      
 ## 6.8.5 2022-05-24 <dave at tiredofit dot ca>
 
    ### Added
