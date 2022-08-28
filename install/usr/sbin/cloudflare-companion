@@ -155,25 +155,35 @@ def is_matching(host, regexes):
     return False
 
 
-def point_domain(name, domain_infos):
+def point_domain(name, domain_info):
     ok = True
-    for domain_info in domain_infos:
-        if name == domain_info['target_domain']:
-            continue
 
-        if name.find(domain_info['name']) >= 0:
+        if name == domain_info['target_domain']:
+        return
+
+
             if is_domain_excluded(name, domain_info):
-                continue
+        return
+
+    if 'zone_id' not in domain_info or domain_info['zone_id'] == '':
+        return
 
             records = cf.zones.dns_records.get(domain_info['zone_id'], params={u'name': name})
+
+    record_type = domain_info['record_type']
+    refresh_entries = domain_info['refresh_entries']
+    proxied = domain_info['proxied']
+    target_domain = domain_info['target_domain']
+
             data = {
-                u'type': u'CNAME',
+        u'type': record_type,
                 u'name': name,
-                u'content': domain_info['target_domain'],
+        u'content': target_domain,
                 u'ttl': domain_info['ttl'],
-                u'proxied': domain_info['proxied']
+        u'proxied': bool(proxied)
             }
-            if REFRESH_ENTRIES:
+
+    if refresh_entries:
                 try:
                     if len(records) == 0:
                         if DRY_RUN:
