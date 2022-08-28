@@ -78,14 +78,14 @@ class RepeatedTimer(object):
 def init_doms_from_env():
     RX_DOMS = re.compile('^DOMAIN[0-9]+$', re.IGNORECASE)
 
-    doms = list()
+    doms = {}
     for k in os.environ:
         if not RX_DOMS.match(k):
             continue
 
         name = os.environ[k]
         try:
-            dom = {
+            doms[name] = {
                 'name': name,
                 'proxied': os.environ.get("{}_PROXIED".format(k), "FALSE").upper() == "TRUE",
                 'zone_id': os.environ["{}_ZONE_ID".format(k)],
@@ -94,7 +94,7 @@ def init_doms_from_env():
                 'excluded_sub_domains': list(filter(None, os.environ.get("{}_EXCLUDED_SUB_DOMAINS".format(k), "").split(','))),
             }
 
-            doms.append(dom)
+
 
         except KeyError as e:
             logger.error("*** ERROR: {} is not set!".format(e))
