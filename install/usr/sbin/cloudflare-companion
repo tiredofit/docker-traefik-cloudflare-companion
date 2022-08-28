@@ -78,23 +78,21 @@ class RepeatedTimer(object):
 def init_doms_from_env():
     RX_DOMS = re.compile('^DOMAIN[0-9]+$', re.IGNORECASE)
 
-    doms = list()
+    doms = {}
     for k in os.environ:
         if not RX_DOMS.match(k):
             continue
 
         name = os.environ[k]
         try:
-            dom = {
+            doms[name] = {
                 'name': name,
                 'proxied': os.environ.get("{}_PROXIED".format(k), "FALSE").upper() == "TRUE",
                 'zone_id': os.environ["{}_ZONE_ID".format(k)],
                 'ttl': os.environ.get("{}_TTL".format(k), DEFAULT_TTL),
-                'target_domain': os.environ.get("{}_TARGET_DOMAIN".format(k), target_domain),
+                'content': os.environ.get("{}_TARGET_DOMAIN".format(k), content),
                 'excluded_sub_domains': list(filter(None, os.environ.get("{}_EXCLUDED_SUB_DOMAINS".format(k), "").split(','))),
             }
-
-            doms.append(dom)
 
         except KeyError as e:
             logger.error("*** ERROR: {} is not set!".format(e))
@@ -155,61 +153,165 @@ def is_matching(host, regexes):
     return False
 
 
-def point_domain(name, domain_infos):
+def point_domain(name, domain_info):
     ok = True
-    for domain_info in domain_infos:
-        if name == domain_info['target_domain']:
-            continue
+    # for domain_info in domain_infos:
 
-        if name.find(domain_info['name']) >= 0:
-            if is_domain_excluded(name, domain_info):
-                continue
+    if name == domain_info['content']:
+        return
 
-            records = cf.zones.dns_records.get(domain_info['zone_id'], params={u'name': name})
-            data = {
-                u'type': u'CNAME',
-                u'name': name,
-                u'content': domain_info['target_domain'],
-                u'ttl': domain_info['ttl'],
-                u'proxied': domain_info['proxied']
-            }
-            if REFRESH_ENTRIES:
-                try:
-                    if len(records) == 0:
-                        if DRY_RUN:
-                            logger.info("DRY-RUN: POST to Cloudflare %s:, %s", domain_info['zone_id'], data)
-                        else:
-                            _ = cf.zones.dns_records.post(domain_info['zone_id'], data=data)
-                        logger.info("Created new record: %s to point to %s", name, domain_info['target_domain'])
-                    else:
-                        for record in records:
-                            if DRY_RUN:
-                                logger.info("DRY-RUN: PUT to Cloudflare %s, %s:, %s", domain_info['zone_id'], record["id"], data)
-                            else:
-                                cf.zones.dns_records.put(domain_info['zone_id'], record["id"], data=data)
-                            logger.info("Updated existing record: %s to point to %s", name, domain_info['target_domain'])
-                except CloudFlare.exceptions.CloudFlareAPIError as ex:
-                    logger.error('** %s - %d %s' % (name, ex, ex))
-                    ok = False
-                    pass
+    if is_domain_excluded(name, domain_info):
+        return
+
+    if 'zone_id' not in domain_info or domain_info['zone_id'] == '':
+        return
+
+    records = cf.zones.dns_records.get(domain_info['zone_id'], params={u'name': name})
+
+    record_type = domain_info['record_type']
+
+    refresh_entries = domain_info['refresh_entries']
+
+    proxied = domain_info['proxied']
+
+    content = domain_info['content']
+
+    data = {
+        u'type': record_type,
+        u'name': name,
+        u'content': content,
+        u'ttl': domain_info['ttl'],
+        u'proxied': bool(proxied)
+    }
+
+    if refresh_entries:
+        try:
+            if len(records) == 0:
+                if DRY_RUN:
+                    logger.info("DRY-RUN: POST to Cloudflare %s:, %s", domain_info['zone_id'], data)
+                else:
+                    _ = cf.zones.dns_records.post(domain_info['zone_id'], data=data)
+                logger.info("Created new record: %s to point to %s", name, domain_info['content'])
             else:
-                try:
+                for record in records:
                     if DRY_RUN:
-                        logger.info("DRY-RUN: POST to Cloudflare %s:, %s", domain_info['zone_id'], data)
+                        logger.info("DRY-RUN: PUT to Cloudflare %s, %s:, %s", domain_info['zone_id'], record["id"], data)
                     else:
-                        _ = cf.zones.dns_records.post(domain_info['zone_id'], data=data)
-                    logger.info("Created new record: %s to point to %s", name, domain_info['target_domain'])
-                except CloudFlare.exceptions.CloudFlareAPIError as ex:
-                    logger.error('** %s - %d %s' % (name, ex, ex))
-                    ok = False
+                        cf.zones.dns_records.put(domain_info['zone_id'], record["id"], data=data)
+                    logger.info("Updated existing record: %s to point to %s", name, domain_info['content'])
+        except CloudFlare.exceptions.CloudFlareAPIError as ex:
+            logger.error('** %s - %d %s' % (name, ex, ex))
+            ok = False
+            pass
+    else:
+        try:
+            if DRY_RUN:
+                logger.info("DRY-RUN: POST to Cloudflare %s:, %s", domain_info['zone_id'], data)
+            else:
+                _ = cf.zones.dns_records.post(domain_info['zone_id'], data=data)
+            logger.info("Created new record: %s to point to %s", name, domain_info['content'])
+        except CloudFlare.exceptions.CloudFlareAPIError as ex:
+            logger.error('** %s - %d %s' % (name, ex, ex))
+            ok = False
     return ok
 
+def check_domain_labels(c, d, t):
+    config = {
+        "zone_id": "",
+        "content": "",
+        "refresh_entries": "",
+        "proxied": "",
+        "record_type": "",
+        "refresh_entries": "",
+        "ttl": ""
+    }
+
+    if('check_container_t1' == t):
+        labels = c.attrs.get(u'Config').get(u'Labels')
+    elif('check_service_t1' == t):
+        labels = c.attrs.get(u'Spec').get(u'TaskTemplate').get(u'ContainerSpec').get(u'Labels')
+    elif('check_container_t2' == t):
+        labels = c.attrs.get(u'Config').get(u'Labels')
+    elif('check_service_t2' == t):
+        labels = c.attrs.get(u'Spec').get(u'Labels')
+
+    doms = init_doms_from_env()
+
+    if(d in doms):
+        config = {**doms[d], **config}
+
+    for prop in labels:
+        if('check_container_t1' == t):
+            value = c.attrs.get(u'Config').get(u'Labels').get(prop)
+        elif('check_service_t1' == t):
+            value = c.attrs.get(u'Spec').get(u'TaskTemplate').get(u'ContainerSpec').get(u'Labels').get(prop)
+        elif('check_container_t2' == t):
+            value = c.attrs.get(u'Config').get(u'Labels').get(prop)
+        elif('check_service_t2' == t):
+            value = c.attrs.get(u'Spec').get(u'Labels').get(prop)
+
+        
+        if 'cloudflare.type' == prop and config['record_type'] == '':
+            config.update({'record_type': value})
+                
+        if 'cloudflare.refresh-entries' == prop and config['refresh_entries'] == '':
+            config.update({'refresh_entries': bool(value)})
+
+        if 'cloudflare.zone-id' == prop and config['zone_id'] == '':
+            config.update({'zone_id': value})
+
+        if 'cloudflare.ttl' == prop and config['ttl'] == '':
+            config.update({'ttl': value})
+
+        if 'cloudflare.proxied' == prop and config['proxied'] == '':
+            config.update({'proxied': bool(value)})
+            
+        if 'cloudflare.content' == prop and config['content'] == '':
+            config.update({'content': value})
+
+        if ("cloudflare."+d+".type") == prop:
+            config.update({'record_type': value})
+
+        if ("cloudflare."+d+".refresh-entries") == prop:
+            config.update({'refresh_entries': bool(value)})
+
+        if ("cloudflare."+d+".proxied") == prop:
+            config.update({'proxied': bool(value)})
+
+        if ("cloudflare."+d+".content") == prop:
+            config.update({'content': value})
+
+        if ("cloudflare."+d+".zone-id") == prop:
+            config.update({'zone_id': value})
+
+        if ("cloudflare."+d+".ttl") == prop:
+            config.update({'ttl': value})
+    
+
+    if ('ZONE_ID' in os.environ) and (config['zone_id'] == ''):
+        config.update({'zone_id': os.environ['ZONE_ID']})
+    if ('TARGET_DOMAIN' in os.environ) and (config['content'] == ''):
+        config.update({'content': os.environ['TARGET_DOMAIN']})
+    if ('REFRESH_ENTRIES' in os.environ) and (config['refresh_entries'] == ''):
+        config.update({'refresh_entries': os.environ['REFRESH_ENTRIES']})
+    if ('PROXIED' in os.environ) and (config['proxied'] == ''):
+        config.update({'proxied': os.environ['PROXIED']})
+    if (config['record_type'] == ''):
+        config.update({'record_type': 'CNAME'})
+    if (config['proxied'] == ''):
+        config.update({'proxied': True})
+    if (config['refresh_entries'] == ''):
+        config.update({'refresh_entries': True})
+
+    return config
 
 def check_container_t1(c):
     mappings = {}
+    config = {}
     logger.debug("Called check_container_t1 for: %s", c)
     cont_id = c.attrs.get(u'Id')
     for prop in c.attrs.get(u'Config').get(u'Labels'):
+        value = c.attrs.get(u'Config').get(u'Labels').get(prop)
         if re.match('traefik.*.frontend.rule', prop):
             value = c.attrs.get(u'Config').get(u'Labels').get(prop)
             if 'Host' in value:
@@ -218,21 +320,25 @@ def check_container_t1(c):
                 if ',' in value:
                     for v in value.split(","):
                         logger.info("Found Container ID: %s with Multi-Hostname %s", cont_id, v)
-                        mappings[v] = 1
+                        config = check_domain_labels(c, v, 'check_container_t1')
+                        mappings[v] = config
                 else:
                     logger.info("Found Container ID: %s with Hostname %s", cont_id, value)
-                    mappings[value] = 1
+                    config = check_domain_labels(c, value, 'check_container_t1')
+                    mappings[value] = config
             else:
                 pass
     return mappings
 
-
 def check_service_t1(s):
     mappings = {}
+    config = {}
     logger.debug("Called check_service_t1 for: %s", s)
     cont_id = s
     s = client.services.get(s)
     for prop in s.attrs.get(u'Spec').get(u'TaskTemplate').get(u'ContainerSpec').get(u'Labels'):
+        value = c.attrs.get(u'Config').get(u'Labels').get(prop)
+
         if re.match('traefik.*.frontend.rule', prop):
             value = s.attrs.get(u'Spec').get(u'TaskTemplate').get(u'ContainerSpec').get(u'Labels').get(prop)
             if 'Host' in value:
@@ -241,21 +347,29 @@ def check_service_t1(s):
                 if ',' in value:
                     for v in value.split(","):
                         logger.info("Found Service ID: %s with Multi-Hostname %s", cont_id, v)
-                        mappings[v] = 1
+
+                        config = check_domain_labels(s, v, 'check_service_t1')
+
+                        mappings[v] = config
                 else:
                     logger.info("Found Service ID: %s with Hostname %s", cont_id, value)
-                    mappings[value] = 1
+                    
+                    config = check_domain_labels(s, value, 'check_service_t1')
+
+                    mappings[value] = config
             else:
                 pass
+            
     return mappings
-
 
 def check_container_t2(c):
     mappings = {}
+    config = {}
     logger.debug("Called check_container_t2 for: %s", c)
     cont_id = c.attrs.get(u'Id')
     for prop in c.attrs.get(u'Config').get(u'Labels'):
         value = c.attrs.get(u'Config').get(u'Labels').get(prop)
+
         if re.match('traefik.*?\.rule', prop):
             if 'Host' in value:
                 logger.debug("Container ID: %s rule value: %s", cont_id, value)
@@ -264,14 +378,20 @@ def check_container_t2(c):
                 if len(extracted_domains) > 1:
                     for v in extracted_domains:
                         logger.info("Found Service ID: %s with Multi-Hostname %s", cont_id, v)
-                        mappings[v] = 1
+                        
+                        config = check_domain_labels(c, v, 'check_container_t2')
+
+                        mappings[v] = config
                 elif len(extracted_domains) == 1:
                     logger.info("Found Service ID: %s with Hostname %s", cont_id, extracted_domains[0])
-                    mappings[extracted_domains[0]] = 1
+                    
+                    config = check_domain_labels(c, value, 'check_container_t2')
+                        
+                    mappings[extracted_domains[0]] = config
             else:
                 pass
-    return mappings
 
+    return mappings
 
 def check_service_t2(s):
     mappings = {}
@@ -288,14 +408,18 @@ def check_service_t2(s):
                 if len(extracted_domains) > 1:
                     for v in extracted_domains:
                         logger.info("Found Service ID: %s with Multi-Hostname %s", cont_id, v)
-                        mappings[v] = 1
+                        config = check_domain_labels(s, v, 'check_service_t2')
+                        mappings[v] = config
                 elif len(extracted_domains) == 1:
                     logger.info("Found Service ID: %s with Hostname %s", cont_id, extracted_domains[0])
-                    mappings[extracted_domains[0]] = 1
+                    
+                    config = check_domain_labels(s, extracted_domains[0], 'check_service_t2')
+
+                    mappings[extracted_domains[0]] = config
             else:
                 pass
-    return mappings
 
+    return mappings
 
 def check_traefik(included_hosts, excluded_hosts):
     mappings = {}
@@ -343,16 +467,21 @@ def check_traefik_and_sync_mappings(included_hosts, excluded_hosts, domain_infos
 def add_to_mappings(current_mappings, mappings):
     for k, v in mappings.items():
         current_mapping = current_mappings.get(k)
-        if current_mapping is None or current_mapping > v:
-            current_mappings[k] = v
+        if current_mapping is None or len(current_mapping) < len(mappings[k]):
+            current_mappings[k] = mappings[k]
 
 
 def sync_mappings(mappings, domain_infos):
     for k, v in mappings.items():
         current_mapping = synced_mappings.get(k)
-        if current_mapping is None or current_mapping > v:
-            if point_domain(k, domain_infos):
-                synced_mappings[k] = v
+        if current_mapping is None or len(current_mapping) < len(mappings[k]):
+            if len(mappings[k]) > 0:
+                if(k in domain_infos):
+                    mappings[k] = {**domain_infos[k], **mappings[k]}
+                else:
+                    mappings[k]['excluded_sub_domains'] = []
+                if point_domain(k, mappings[k]):
+                    synced_mappings[k] = mappings[k]
 
 
 def get_initial_mappings(included_hosts, excluded_hosts):
@@ -401,7 +530,7 @@ try:
     if not token:
         token = get_docker_secret('CF_TOKEN', autocast_name=True, getenv=True)
 
-    target_domain = os.environ['TARGET_DOMAIN']
+    content = os.environ['TARGET_DOMAIN']
     domain = os.environ['DOMAIN1']
 
 except KeyError as e:

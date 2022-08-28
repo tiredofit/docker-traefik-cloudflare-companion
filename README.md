@@ -147,6 +147,49 @@ Name your secrets either CF_EMAIL and CF_TOKEN or cf_email and cf_token.
 
 cloudflare-companion supports three different discovery mode: Docker, Docker Swarm, and Traefik Polling.  The Docker discovery mode is the only mode enabled by default.  Once matching hosts are discovered, cloudflare-companion will add or update CNAMEs in CloudFlare that point to the configured `TARGET_DOMAIN`.
 
+### LABELS
+
+cloudflare.type - Record type
+
+cloudflare.refresh-entries - Update entries if exists
+
+cloudflare.zone-id - Zone ID
+
+cloudflare.proxied - Define if is proxied
+
+cloudflare.content - Record content
+
+cloudflare.ttl - TTL
+
+### Service labels
+```
+## Replace env settings with global service label
+- cloudflare.zone-id=113369a14415bf0f54f2f6791fae9f05
+- cloudflare.refresh-entries=true
+- cloudflare.ttl=1500
+```
+
+### Labels per domain
+
+cloudflare.{domain}.type - Record type
+
+cloudflare.{domain}.refresh-entries - Update entry if exists
+
+cloudflare.{domain}.zone-id - Zone ID
+
+cloudflare.{domain}.proxied - Define if is proxied
+
+cloudflare.{domain}.content - Record content
+
+cloudflare.{domain}.ttt - TTL
+
+```
+## Replace env settings and global service settings
+## Per domain config
+- cloudflare.joblist.ersolucoesweb.com.br.type=A
+- cloudflare.joblist.ersolucoesweb.com.br.content=127.0.0.1
+- cloudflare.joblist.ersolucoesweb.com.br.proxied=false
+```
 #### Docker
 
 cloudflare-companion will discover running Docker containers by searching for supported labels.

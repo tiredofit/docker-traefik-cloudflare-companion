@@ -30,6 +30,7 @@ RUN set -x && \
                 py3-idna \
                 py3-openssl \
                 py3-requests \
+                py3-packaging \
                 py3-soupsieve \
                 py3-urllib3 \
                 py3-websocket-client \
@@ -42,6 +43,7 @@ RUN set -x && \
             get-docker-secret \
             docker[tls] \
             requests \
+            packaging \
             && \
     \
 ### Cleanup
