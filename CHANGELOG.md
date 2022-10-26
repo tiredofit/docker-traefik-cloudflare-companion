@@ -1,3 +1,10 @@
+## 6.9.0 2022-10-26 <dave at tiredofit dot ca>
+
+   ### Added
+      - Allow SWARM_MODE to work with a daemon proxy. Credit to mistressmeeple@github
+      - Add support for defaultRule to pull from Traefik as opposed to just labels. Credit to mistressmeeple@github
+
+
 ## 6.8.5 2022-05-24 <dave at tiredofit dot ca>
 
    ### Added
