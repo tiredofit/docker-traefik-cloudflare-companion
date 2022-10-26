@@ -458,7 +458,8 @@ logger.debug("Traefik Polling Mode: %s", False)
 client = docker.from_env()
 
 if SWARM_MODE:
-    api = docker.APIClient()
+    DOCKER_HOST = os.environ.get('DOCKER_HOST', None)
+    api = docker.APIClient(base_url=DOCKER_HOST)
 
 doms = init_doms_from_env()
 traefik_included_hosts, traefik_excluded_hosts = init_traefik_from_env()
