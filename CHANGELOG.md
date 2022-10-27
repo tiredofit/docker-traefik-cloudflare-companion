@@ -1,3 +1,9 @@
+## 6.9.1 2022-10-27 <dave at tiredofit dot ca>
+
+   ### Added
+      - Add py3-packaging module into run dependencies (#80)
+
+
 ## 6.9.0 2022-10-26 <dave at tiredofit dot ca>
 
    ### Added

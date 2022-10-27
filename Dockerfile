@@ -29,6 +29,7 @@ RUN set -x && \
                 py3-chardet \
                 py3-idna \
                 py3-openssl \
+                py3-packaging \
                 py3-requests \
                 py3-soupsieve \
                 py3-urllib3 \
