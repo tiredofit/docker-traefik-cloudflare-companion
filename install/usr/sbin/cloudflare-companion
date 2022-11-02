@@ -405,11 +405,11 @@ def get_secret_by_env(envvar_name):
 
 try:
     # Check for uppercase docker secrets or env variables
-    email = get_envBySecret('CF_EMAIL')
-    token = get_envBySecret('CF_TOKEN')
+    email = get_secret_by_env('CF_EMAIL')
+    token = get_secret_by_env('CF_TOKEN')
 
-    get_envBySecret('DOMAIN1_ZONE_ID')
-    get_envBySecret('DOMAIN2_ZONE_ID')
+    get_secret_by_env('DOMAIN1_ZONE_ID')
+    get_secret_by_env('DOMAIN2_ZONE_ID')
 
     # Check for lowercase docker secrets
     if not email:
