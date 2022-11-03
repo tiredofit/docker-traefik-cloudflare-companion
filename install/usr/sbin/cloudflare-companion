@@ -408,8 +408,13 @@ try:
     email = get_secret_by_env('CF_EMAIL')
     token = get_secret_by_env('CF_TOKEN')
 
-    get_secret_by_env('DOMAIN1_ZONE_ID')
-    get_secret_by_env('DOMAIN2_ZONE_ID')
+    # Check for any cf zone id based on the respective domain env var existing
+    RX_DOMS = re.compile('^DOMAIN[0-9]+$', re.IGNORECASE)
+    for env in os.environ:
+        if not RX_DOMS.match(env):
+            continue
+
+        get_secret_by_env("{}_ZONE_ID".format(env))
 
     # Check for lowercase docker secrets
     if not email:
