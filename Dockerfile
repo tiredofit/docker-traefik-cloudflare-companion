@@ -1,17 +1,19 @@
-FROM docker.io/tiredofit/alpine:3.17
+ARG DISTRO="alpine"
+ARG DISTRO_VARIANT="3.17"
+
+FROM docker.io/tiredofit/${DISTRO}:${DISTRO_VARIANT}
 LABEL maintainer="Dave Conroy (github.com/tiredofit)"
 
-### Set Environment Variables
 ENV CONTAINER_ENABLE_MESSAGING=FALSE \
     CONTAINER_ENABLE_SCHEDULING=FALSE \
     IMAGE_NAME="tiredofit/traefik-cloudflare-companion" \
     IMAGE_REPO_URL="https://github.com/tiredofit/docker-traefik-cloudflare-companion/"
 
-### Dependencies
-RUN set -x && \
-    apk update && \
-    apk upgrade && \
-    apk add -t .tcc-build-deps \
+RUN source /assets/functions/00-container && \
+    set -x && \
+    package update && \
+    package upgrade && \
+    package install .tcc-build-deps \
                 cargo \
                 gcc \
                 libffi-dev \
@@ -23,7 +25,7 @@ RUN set -x && \
                 python3-dev \
                 && \
     \
-    apk add -t .tcc-run-deps \
+    package install .tcc-run-deps \
                 py3-beautifulsoup4 \
                 py3-certifi \
                 py3-chardet \
@@ -45,10 +47,9 @@ RUN set -x && \
             requests \
             && \
     \
-### Cleanup
-    apk del .tcc-build-deps && \
-    rm -rf /root/.cache /root/.cargo && \
-    rm -rf /var/cache/apk/*
+    package remove .tcc-build-deps && \
+    package cleanup && \ 
+    rm -rf /root/.cache \
+           /root/.cargo
 
-### Add Files
 COPY install /
