@@ -1,3 +1,9 @@
+## 6.10.0 2022-12-14 <dave at tiredofit dot ca>
+
+   ### Added
+      - Add _FILE environment variables for secrets. Credit to DennisGaida@github for doing the work.
+
+
 ## 6.9.3 2022-12-01 <dave at tiredofit dot ca>
 
    ### Changed
