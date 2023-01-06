@@ -11,6 +11,14 @@ ENV CONTAINER_ENABLE_MESSAGING=FALSE \
 
 RUN source /assets/functions/00-container && \
     set -x && \
+    addgroup -S -g 10000 tcc && \
+    adduser -D -S -s /sbin/nologin \
+            -h /dev/null \
+            -G tcc \
+            -g "tcc" \
+            -u 10000 tcc \
+            && \
+    \
     package update && \
     package upgrade && \
     package install .tcc-build-deps \
@@ -26,6 +34,7 @@ RUN source /assets/functions/00-container && \
                 && \
     \
     package install .tcc-run-deps \
+                docker-py \
                 py3-beautifulsoup4 \
                 py3-certifi \
                 py3-chardet \
@@ -43,12 +52,11 @@ RUN source /assets/functions/00-container && \
     pip install \
             cloudflare \
             get-docker-secret \
-            docker[tls] \
             requests \
             && \
     \
     package remove .tcc-build-deps && \
-    package cleanup && \ 
+    package cleanup && \
     rm -rf /root/.cache \
            /root/.cargo
 

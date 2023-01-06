@@ -1,12 +1,16 @@
-version: '3.7'
 services:
-
   cloudflare-companion:
     image: tiredofit/traefik-cloudflare-companion
     container_name: cloudflare-companion
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./logs:/logs
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
+      - TIMEZONE=America/Vancouver
+
+      - LOG_TYPE=BOTH
+      - LOG_LEVEL=INFO
+
       - TRAEFIK_VERSION=2
       - CF_EMAIL=email@example.com
       - CF_TOKEN=fbSx3dk3A3mJ6UukLQ7zRbo63H5UdsGSCqQnTvbJDgyQaTp
@@ -18,12 +22,9 @@ services:
       #- DOCKER_CERT_PATH=/docker-certs
       #- DOCKER_TLS_VERIFY=1
     networks:
-    - internal
-    - services
+      - services
     restart: always
 
 networks:
-  internal:
-    external: false
   services:
     external: true

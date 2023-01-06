@@ -1,0 +1,35 @@
+#!/command/with-contenv bash
+
+bootstrap_filesystem() {
+    case "${LOG_TYPE,,}" in
+        both | file )
+            print_debug "[bootstrap_filesystem] Logging to file at '${LOG_PATH}/${LOG_FILE}'"
+            if [ ! -d "${LOG_PATH}" ] ; then
+                mkdir -p "${LOG_PATH}"
+            fi
+            if [ $(stat -c %U "${LOG_PATH}") != "${TCC_USER}" ] ; then chown "${TCC_USER}":"${TCC_USER}" "${LOG_PATH}" ; fi
+            if [ ! -f "${LOG_PATH}"/"${LOG_FILE}" ] ; then
+                sudo -u "${TCC_USER}" touch "${LOG_PATH}"/"${LOG_FILE}"
+            fi
+            create_logrotate tcc "${LOG_PATH}"/"${LOG_FILE}" "${TCC_USER}" "${TCC_USER}" tcc
+            if [ "$(stat -c %U "${LOG_PATH}"/"${LOG_FILE}")" != "${TCC_USER}" ] ; then chown "${TCC_USER}":"${TCC_USER}" "${LOG_PATH}"/"${LOG_FILE}" ; fi
+        ;;
+    esac
+}
+
+sanity_test() {
+    if [ -z "${DOCKER_HOST}" ] && [ "${TCC_USER}" != "root" ] ; then
+        if [ "$(echo "${DOCKER_ENTRYPOINT}" | sed -e 's,^\(.*://\).*,\1,g')" = "unix://" ] ; then
+            docker_socket="$(echo "${DOCKER_ENTRYPOINT}" | sed 's/^\s*.*:\/\///g'})"
+            if [ "$(stat -c %F "${docker_socket}")" = "socket" ] && [ "$(sudo -u "${TCC_USER}" test -r "${docker_socket}")" ] ; then
+                print_debug "[sanity_test] Can access Docker socket at '${docker_socket}' as user '${TCC_USER}'"
+            else
+                print_error "[sanity_test] Can't access Docker socket at '${docker_socket}' as user '${TCC_USER}'"
+            exit 1
+            fi
+        fi
+    fi
+
+    sanity_var TARGET_DOMAIN "Target Domain"
+    sanity_var DOMAIN1 "Domain 1"
+}

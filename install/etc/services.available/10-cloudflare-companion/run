@@ -1,6 +1,7 @@
 #!/command/with-contenv bash
 
 source /assets/functions/00-container
+prepare_service defaults single
 PROCESS_NAME="traefik-cloudflare-companion"
 
 check_container_initialized
@@ -8,4 +9,6 @@ check_service_initialized init
 liftoff
 
 print_start "Starting Traefik Cloudflare Companion"
-exec python3 -u /usr/sbin/cloudflare-companion
+exec s6-setuidgid "${TCC_USER}" \
+                                python3 \
+                                        -u /usr/sbin/cloudflare-companion

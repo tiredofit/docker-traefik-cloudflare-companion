@@ -1,0 +1,7 @@
+#!/command/with-contenv bash
+
+DOCKER_ENTRYPOINT=${DOCKER_ENTRYPOINT:-"unix:///var/run/docker.sock"}
+LOG_FILE=${LOG_FILE:-"tcc.log"}
+LOG_PATH=${LOG_PATH:-"/logs/"}
+LOG_TYPE=${LOG_TYPE:-"BOTH"}
+TCC_USER=${TCC_USER:-"root"}

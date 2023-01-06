@@ -1,3 +1,18 @@
+## 7.0.0 2023-01-06 <dave at tiredofit dot ca>
+
+This release changes some environment variable names to more explicit variables for this image as opposed to piggybacking off of base image variables. Please review changelog accordingly and make necessary changes by following the variables in the README
+
+   ### Added
+      - [logging] Added Timestamps for Logging. LOG_LEVEL=DEBUG also provides line number of script for troubleshooting
+      - [logging] Add LOG_TYPE (CONSOLE,FILE,BOTH) options for better logging. FILE and BOTH also include log rotation
+      - [runtime] Ability to run as non root - User available is `tcc` by setting environment variable 'TCC_USER' - Will check if it can access Docker Socket and fail if not
+
+   ### Changed
+      - Environment variable SWARM_MODE changes to DOCKER_SWARM_MODE
+      - CONTAINER_LOG_LEVEL changes to LOG_LEVEL
+      - Switch to using packaged Docker python module instead of building ourselves
+
+
 ## 6.10.0 2022-12-14 <dave at tiredofit dot ca>
 
    ### Added
