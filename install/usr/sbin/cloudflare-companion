@@ -29,18 +29,27 @@ DRY_RUN = os.environ.get('DRY_RUN', "FALSE")
 logger = logging.getLogger(__name__)
 DEBUG = False
 VERBOSE = False
+date_fmt = "%Y-%m-%dT%H:%M:%S%z"
 
 if CONTAINER_LOG_LEVEL.upper() == "DEBUG":
     logger.setLevel(logging.DEBUG)
+    fmt = "%(asctime)s %(levelname)s %(lineno)d | %(message)s"
     DEBUG = True
 
 if CONTAINER_LOG_LEVEL.upper() == "VERBOSE":
     logger.setLevel(logging.DEBUG)
+    fmt = "%(asctime)s %(levelname)s | %(message)s"
     DEBUG = True
     VERBOSE = True
 
+if CONTAINER_LOG_LEVEL.upper() == "NOTICE":
+    fmt = "%(asctime)s %(levelname)s | %(message)s"
+
+if CONTAINER_LOG_LEVEL.upper() == "INFO":
+    fmt = "%(asctime)s %(levelname)s | %(message)s"
+
 ch = logging.StreamHandler()
-formatter = logging.Formatter('[%(levelname)s] %(message)s')
+formatter = logging.Formatter(fmt, date_fmt)
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
@@ -101,7 +110,7 @@ def init_doms_from_env():
 
     for dom in doms:
         logger.debug("Domain Configuration: %s", dom)
-        
+
     return doms
 
 
@@ -138,9 +147,9 @@ def is_domain_excluded(name, dom):
     excluded_sub_domains = dom['excluded_sub_domains']
 
     for sub_dom in excluded_sub_domains:
-        
+
         fqdn_with_sub_dom = sub_dom + '.' + dom['name']
-    
+
         if name.find(fqdn_with_sub_dom) != -1:
             logger.info('Ignoring %s because it falls until excluded sub domain: %s', name, sub_dom)
             return True
