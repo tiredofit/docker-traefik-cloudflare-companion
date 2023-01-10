@@ -1,3 +1,9 @@
+## 7.0.1 2023-01-10 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Introduce a while loop to poll for events endlessly without restarting script after a socket timeout if using HTTP connections
+
+
 ## 7.0.0 2023-01-06 <dave at tiredofit dot ca>
 
 This release changes some environment variable names to more explicit variables for this image as opposed to piggybacking off of base image variables. Please review changelog accordingly and make necessary changes by following the variables in the README
