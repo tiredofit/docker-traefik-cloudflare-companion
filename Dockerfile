@@ -11,12 +11,12 @@ ENV CONTAINER_ENABLE_MESSAGING=FALSE \
 
 RUN source /assets/functions/00-container && \
     set -x && \
-    addgroup -S -g 10000 tcc && \
+    addgroup -S -g 8080 tcc && \
     adduser -D -S -s /sbin/nologin \
             -h /dev/null \
             -G tcc \
             -g "tcc" \
-            -u 10000 tcc \
+            -u 8080 tcc \
             && \
     \
     package update && \
