@@ -1,3 +1,10 @@
+## 7.0.2 2023-01-10 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Handle Ctrl C better
+      - Exit if Docker Errors during while loop
+
+
 ## 7.0.1 2023-01-10 <dave at tiredofit dot ca>
 
    ### Changed

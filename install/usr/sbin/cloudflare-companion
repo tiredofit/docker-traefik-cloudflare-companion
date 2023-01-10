@@ -13,6 +13,7 @@ from logging import handlers
 import os
 import re
 import requests
+import signal
 import sys
 import time
 import threading
@@ -29,6 +30,12 @@ REFRESH_ENTRIES = os.environ.get('REFRESH_ENTRIES', "FALSE")
 TRAEFIK_POLL_SECONDS = int(os.environ.get('TRAEFIK_POLL_SECONDS', "60"))
 TRAEFIK_POLL_URL = os.environ.get('TRAEFIK_POLL_URL', None)
 TRAEFIK_VERSION = os.environ.get('TRAEFIK_VERSION', "2")
+
+# Handle Ctrl C
+def signal_handler(signal, frame):
+  sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
 
 # set up logging
 logger = logging.getLogger(__name__)
@@ -531,6 +538,7 @@ while (forever < 777):
                         add_to_mappings(new_mappings, check_service_t2(client.services.get(event.get(u'id'))))
 
             except docker.errors.NotFound as e:
+                forever=778
                 pass
 
         if DOCKER_SWARM_MODE:
@@ -547,6 +555,7 @@ while (forever < 777):
                         add_to_mappings(new_mappings, check_service_t2(node_id))
 
                 except docker.errors.NotFound as e:
+                    forever=778
                     pass
 
         sync_mappings(new_mappings, doms)
