@@ -1,0 +1,132 @@
+### Application Level Image CI
+### Dave Conroy <dave at tiredofit dot ca>
+
+name: "build"
+
+on:
+  push:
+    paths:
+      - "**"
+      - "!README.md"
+jobs:
+  image_build:
+    env:
+      build_file: Dockerfile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Prepare
+        id: prep
+        run: |
+          if [[ "${GITHUB_REF}" == refs/heads/* ]]; then
+              if [[ "${GITHUB_REF}" == refs/heads/*/* ]] ; then
+                  git_branch="${GITHUB_REPOSITORY/docker-/}:$(echo $GITHUB_REF | sed "s|refs/heads/||g" | sed "s|/|-|g")"
+              else
+                  git_branch=${GITHUB_REF#refs/heads/}
+              fi
+
+              case "${git_branch}" in
+                  "main" | "master" )
+                      branch_tag="${GITHUB_REPOSITORY}:latest"
+                  ;;
+                  "develop" )
+                      branch_tag="${GITHUB_REPOSITORY}:develop"
+                  ;;
+                  * )
+                      if [ -n "${{ secrets.LATEST }}" ] ; then
+                          if [ "${branch_tag}" = "${{ secrets.LATEST }}" ]; then
+                              branch_tag="${GITHUB_REPOSITORY}:${git_branch},${GITHUB_REPOSITORY}:${git_branch}-latest,${GITHUB_REPOSITORY}:latest"
+                          else
+                              branch_tag="${GITHUB_REPOSITORY}:${git_branch},${GITHUB_REPOSITORY}:${git_branch}-latest"
+                          fi
+                      else
+                          branch_tag="${GITHUB_REPOSITORY}:${git_branch},${GITHUB_REPOSITORY}:${git_branch}-latest"
+                      fi
+                  ;;
+              esac
+          fi
+
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+              git_tag="${GITHUB_REPOSITORY}:$(echo ${GITHUB_REF} | sed 's|refs/tags/||g')"
+          fi
+
+          if [ -n "${BRANCHTAG}" ] && [ -n "${GITTAG}" ]; then
+              image_tags=${branch_tag},${git_tag}
+          else
+              image_tags="${branch_tag}${git_tag}"
+          fi
+
+          echo "dockerhub_repo=${GITHUB_REPOSITORY/docker-/}" >> $GITHUB_ENV
+          dockerhub_images=$(echo "${image_tags}" | sed "s|${GITHUB_REPOSITORY}|docker.io/${GITHUB_REPOSITORY/docker-/}|g")
+          ghcr_images=$(echo "${image_tags}" | sed "s|${GITHUB_REPOSITORY}|ghcr.io/${GITHUB_REPOSITORY}|g")
+          echo "container_images=${dockerhub_images},${ghcr_images}" >> $GITHUB_OUTPUT
+      - name: Label
+        id: Label
+        run: |
+          image_name=${GITHUB_REPOSITORY/docker-/}
+          if [ -f "${{ env.build_file }}" ] ; then
+              sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_repository=\"https://github.com/${GITHUB_REPOSITORY}\"" ${{ env.build_file }}
+              sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_commit=\"${GITHUB_SHA}\"" ${{ env.build_file }}
+              sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_committed_by=\"${GITHUB_ACTOR}\"" ${{ env.build_file }}
+              sed -i "/FROM .*/a LABEL tiredofit.${image_name}.image_build_date=\"$(date +'%Y-%m-%d %H:%M:%S')\"" ${{ env.build_file }}
+
+              if [ -f "CHANGELOG.md" ] ; then
+                sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_changelog_version=\"$(head -n1 ./CHANGELOG.md | awk '{print $2}')\"" ${{ env.build_file }}
+                mkdir -p install/assets/.changelogs ; cp CHANGELOG.md install/assets/.changelogs/${GITHUB_REPOSITORY/\//_}.md
+              fi
+
+              if [[ $GITHUB_REF == refs/tags/* ]]; then
+                sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_tag=\"${GITHUB_REF#refs/tags/v}\"" ${{ env.build_file }}
+              fi
+
+              if [[ $GITHUB_REF == refs/heads/* ]]; then
+                sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_branch=\"${GITHUB_REF#refs/heads/}\"" ${{ env.build_file }}
+              fi
+          fi
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm,arm64
+
+      - name: Login to DockerHub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v3
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./${{ env.build_file }}
+          #platforms: linux/amd64,linux/arm/v7,linux/arm64
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.prep.outputs.container_images }}
+
+      - name: Update Docker Hub Information
+        if: github.event_name != 'pull_request'
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: ${{ env.dockerhub_repo }}
+          short-description: ${{ github.event.repository.description }}
+          readme-filepath: ./README.md
