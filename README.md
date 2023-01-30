@@ -62,11 +62,17 @@ This will build a Docker image to automatically update [Cloudflare](https://www.
 Clone this repository and build the image with `docker build -t (imagename) .`
 
 ### Prebuilt Images
-Builds of the image are available on [Docker Hub](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion) and is the recommended method of installation.
+Builds of the image are available on [Docker Hub](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion)
 
 ```bash
-docker pull tiredofit/traefik-cloudflare-companion:(imagetag)
+docker pull docker.io/tiredofdit/traefik-cloudflare-companion:(imagetag)
 ```
+Builds of the image are also available on the [Github Container Registry](https://github.com/tiredofit/docker-traefik-cloudflare-companion/pkgs/container/docker-traefik-cloudflare-companion) 
+ 
+```
+docker pull ghcr.io/tiredofit/docker-traefik-cloudflare-companion/pkgs/container/docker-traefik-cloudflare-companion):(imagetag)
+``` 
+
 The following image tags are available along with their tagged release based on what's written in the [Changelog](CHANGELOG.md):
 
 | Container OS | Tag       |
