@@ -60,4 +60,4 @@ RUN source /assets/functions/00-container && \
     rm -rf /root/.cache \
            /root/.cargo
 
-COPY install /
+COPY src /
