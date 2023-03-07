@@ -21,6 +21,7 @@ from urllib.parse import urlparse
 
 DRY_RUN = os.environ.get('DRY_RUN', "FALSE")
 DEFAULT_TTL = os.environ.get('DEFAULT_TTL', "1")
+ENABLE_DOCKER_POLL = os.environ.get('ENABLE_DOCKER_POLL', "TRUE")
 DOCKER_SWARM_MODE = os.environ.get('DOCKER_SWARM_MODE', "FALSE")
 ENABLE_TRAEFIK_POLL = os.environ.get('ENABLE_TRAEFIK_POLL', "FALSE")
 LOGFILE = os.environ.get('LOG_PATH', "/logs") + '/' + os.environ.get('LOG_FILE', "tcc.log")
@@ -71,32 +72,10 @@ if LOG_TYPE.upper() == "FILE" or LOG_TYPE.upper() == "BOTH":
 
 synced_mappings = {}
 
-class RepeatedTimer(object):
-    def __init__(self, interval, function, *args, **kwargs):
-        self._timer = None
-        self.interval = interval
-        self.function = function
-        self.args = args
-        self.kwargs = kwargs
-        self.is_running = False
-        self.next_call = time.time()
-        self.start()
-
-    def _run(self):
-        self.is_running = False
-        self.start()
-        self.function(*self.args, **self.kwargs)
-
-    def start(self):
-        if not self.is_running:
-            self.next_call += self.interval
-            self._timer = threading.Timer(self.next_call - time.time(), self._run)
-            self._timer.start()
-            self.is_running = True
-
-    def stop(self):
-        self._timer.cancel()
-        self.is_running = False
+class RepeatedTimer(threading.Timer):
+    def run(self):
+        while not self.finished.wait(self.interval):
+            self.function(*self.args, **self.kwargs)
 
 
 def init_doms_from_env():
@@ -382,12 +361,13 @@ def get_initial_mappings(included_hosts, excluded_hosts):
     logger.debug("Starting Initialization Routines")
 
     mappings = {}
-    for c in client.containers.list():
-        logger.debug("Container List Discovery Loop")
-        if TRAEFIK_VERSION == "1":
-            add_to_mappings(mappings, check_container_t1(c))
-        elif TRAEFIK_VERSION == "2":
-            add_to_mappings(mappings, check_container_t2(c))
+    if ENABLE_DOCKER_POLL:
+        for c in client.containers.list():
+            logger.debug("Container List Discovery Loop")
+            if TRAEFIK_VERSION == "1":
+                add_to_mappings(mappings, check_container_t1(c))
+            elif TRAEFIK_VERSION == "2":
+                add_to_mappings(mappings, check_container_t2(c))
 
     if DOCKER_SWARM_MODE:
         logger.debug("Service List Discovery Loop")
@@ -461,6 +441,11 @@ if REFRESH_ENTRIES.lower() == "true":
 elif REFRESH_ENTRIES.lower() == "false":
     REFRESH_ENTRIES = False
 
+if ENABLE_DOCKER_POLL.lower() == "true":
+    ENABLE_DOCKER_POLL = True
+elif ENABLE_DOCKER_POLL.lower() == "false":
+    ENABLE_DOCKER_POLL = False
+
 if DOCKER_SWARM_MODE.lower() == "true":
     DOCKER_SWARM_MODE = True
 elif DOCKER_SWARM_MODE.lower() == "false":
@@ -471,8 +456,12 @@ if ENABLE_TRAEFIK_POLL.lower() == "true":
 elif ENABLE_TRAEFIK_POLL.lower() == "false":
     ENABLE_TRAEFIK_POLL = False
 
+if not ENABLE_DOCKER_POLL and DOCKER_SWARM_MODE:
+    exit("ERROR: Cannot enable DOCKER_SWARM_MODE without enabling ENABLE_DOCKER_POLL=true")
+
 if DRY_RUN:
     logger.warning("Dry Run: %s", DRY_RUN)
+logger.debug("Docker Polling: %s", ENABLE_DOCKER_POLL)
 logger.debug("Swarm Mode: %s", DOCKER_SWARM_MODE)
 logger.debug("Refresh Entries: %s", REFRESH_ENTRIES)
 logger.debug("Traefik Version: %s", TRAEFIK_VERSION)
@@ -500,11 +489,12 @@ if ENABLE_TRAEFIK_POLL:
 
 logger.debug("Traefik Polling Mode: %s", False)
 
-client = docker.from_env()
+if ENABLE_DOCKER_POLL:
+    client = docker.from_env()
 
-if DOCKER_SWARM_MODE:
-    DOCKER_HOST = os.environ.get('DOCKER_HOST', None)
-    api = docker.APIClient(base_url=DOCKER_HOST)
+    if DOCKER_SWARM_MODE:
+        DOCKER_HOST = os.environ.get('DOCKER_HOST', None)
+        api = docker.APIClient(base_url=DOCKER_HOST)
 
 doms = init_doms_from_env()
 traefik_included_hosts, traefik_excluded_hosts = init_traefik_from_env()
@@ -513,49 +503,52 @@ sync_mappings(get_initial_mappings(traefik_included_hosts, traefik_excluded_host
 
 if ENABLE_TRAEFIK_POLL:
     logger.debug("Starting traefik router polling")
-    traefik_poll = RepeatedTimer(TRAEFIK_POLL_SECONDS, check_traefik_and_sync_mappings, traefik_included_hosts, traefik_excluded_hosts, doms)
-    atexit.register(traefik_poll.stop)
+    traefik_poll = RepeatedTimer(TRAEFIK_POLL_SECONDS, check_traefik_and_sync_mappings, args=(traefik_included_hosts, traefik_excluded_hosts, doms))
+    traefik_poll.start()
+    atexit.register(traefik_poll.cancel)
 
 logger.debug("Starting event watch routines")
 
 t = datetime.now().strftime("%s")
 
 logger.debug("Time: %s", t)
-
-forever=0
-while (forever < 777):
-    for event in client.events(since=t, filters={'Type': 'service', 'Action': u'update', 'status': u'start'}, decode=True):
-        new_mappings = {}
-        if event.get(u'status') == u'start':
-            try:
-                if TRAEFIK_VERSION == "1":
-                    add_to_mappings(new_mappings, check_container_t1(client.containers.get(event.get(u'id'))))
-                    if DOCKER_SWARM_MODE:
-                        add_to_mappings(new_mappings, check_service_t1(client.services.get(event.get(u'id'))))
-                elif TRAEFIK_VERSION == "2":
-                    add_to_mappings(new_mappings, check_container_t2(client.containers.get(event.get(u'id'))))
-                    if DOCKER_SWARM_MODE:
-                        add_to_mappings(new_mappings, check_service_t2(client.services.get(event.get(u'id'))))
-
-            except docker.errors.NotFound as e:
-                forever=778
-                pass
-
-        if DOCKER_SWARM_MODE:
-            if event.get(u'Action') == u'update':
+    
+if ENABLE_DOCKER_POLL:
+    forever=0
+    while (forever < 777):
+        for event in client.events(since=t, filters={'Type': 'service', 'Action': u'update', 'status': u'start'}, decode=True):
+            new_mappings = {}
+            if event.get(u'status') == u'start':
                 try:
                     if TRAEFIK_VERSION == "1":
-                        node_id = event.get(u'Actor').get(u'ID')
-                        logger.debug("Detected Update on node: %s", node_id)
-                        add_to_mappings(new_mappings, check_service_t1(node_id))
+                        add_to_mappings(new_mappings, check_container_t1(client.containers.get(event.get(u'id'))))
+                        if DOCKER_SWARM_MODE:
+                            add_to_mappings(new_mappings, check_service_t1(client.services.get(event.get(u'id'))))
                     elif TRAEFIK_VERSION == "2":
-                        node_id = event.get(u'Actor').get(u'ID')
-                        service_id = client.services.list()
-                        logger.debug("Detected Update on node: %s", node_id)
-                        add_to_mappings(new_mappings, check_service_t2(node_id))
+                        add_to_mappings(new_mappings, check_container_t2(client.containers.get(event.get(u'id'))))
+                        if DOCKER_SWARM_MODE:
+                            add_to_mappings(new_mappings, check_service_t2(client.services.get(event.get(u'id'))))
 
                 except docker.errors.NotFound as e:
                     forever=778
                     pass
 
-        sync_mappings(new_mappings, doms)
+            if DOCKER_SWARM_MODE:
+                if event.get(u'Action') == u'update':
+                    try:
+                        if TRAEFIK_VERSION == "1":
+                            node_id = event.get(u'Actor').get(u'ID')
+                            logger.debug("Detected Update on node: %s", node_id)
+                            add_to_mappings(new_mappings, check_service_t1(node_id))
+                        elif TRAEFIK_VERSION == "2":
+                            node_id = event.get(u'Actor').get(u'ID')
+                            service_id = client.services.list()
+                            logger.debug("Detected Update on node: %s", node_id)
+                            add_to_mappings(new_mappings, check_service_t2(node_id))
+
+                    except docker.errors.NotFound as e:
+                        forever=778
+                        pass
+
+            sync_mappings(new_mappings, doms)
+
