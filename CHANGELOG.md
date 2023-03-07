@@ -1,3 +1,9 @@
+## 7.0.3 2023-03-07 <fenaren@github>
+
+   ### Added
+      - Add support for NOT using Docker entirely relying on Traefik API with ENABLE_DOCKER_POLL flag
+
+
 ## 7.0.2 2023-01-10 <dave at tiredofit dot ca>
 
    ### Changed
