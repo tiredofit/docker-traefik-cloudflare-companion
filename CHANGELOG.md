@@ -1,3 +1,9 @@
+## 7.0.4 2023-03-18 <dave at tiredofit dot ca>
+
+   ### Added
+      - Set CONTAINER_PROCESS_RUNAWAY_PROTECTOR=FALSE
+
+
 ## 7.0.3 2023-03-07 <fenaren@github>
 
    ### Added

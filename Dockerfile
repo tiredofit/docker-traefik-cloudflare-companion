@@ -6,6 +6,7 @@ LABEL maintainer="Dave Conroy (github.com/tiredofit)"
 
 ENV CONTAINER_ENABLE_MESSAGING=FALSE \
     CONTAINER_ENABLE_SCHEDULING=FALSE \
+    CONTAINER_PROCESS_RUNAWAY_PROTECTOR=FALSE \
     IMAGE_NAME="tiredofit/traefik-cloudflare-companion" \
     IMAGE_REPO_URL="https://github.com/tiredofit/docker-traefik-cloudflare-companion/"
 
