@@ -313,7 +313,7 @@ def check_traefik(included_hosts, excluded_hosts):
                         value = router["rule"]
                         if 'Host' in value:
                             logger.debug("Traefik Router Name: %s rule value: %s", name, value)
-                            extracted_domains = re.findall(r'Host\(\`([a-zA-Z0-9\.\-]+)\`\)', value)
+                            extracted_domains = re.findall(r'\`([a-zA-Z0-9\.\-]+)\`', value)
                             logger.debug("Traefik Router Name: %s extracted domains from rule: %s", name, extracted_domains)
                             if len(extracted_domains) > 1:
                                 for v in extracted_domains:
