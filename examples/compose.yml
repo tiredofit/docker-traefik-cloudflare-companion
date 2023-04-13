@@ -21,6 +21,9 @@ services:
       #- DOCKER_HOST=tcp://198.51.100.32:2376
       #- DOCKER_CERT_PATH=/docker-certs
       #- DOCKER_TLS_VERIFY=1
+
+      #- TRAEFIK_FILTER_LABEL=traefik.constraint
+      #- TRAEFIK_FILTER=proxy-public
     networks:
       - services
     restart: always
