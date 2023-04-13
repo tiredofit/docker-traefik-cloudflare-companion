@@ -1,3 +1,9 @@
+## 7.1.0 2023-04-13 <dave at tiredofit dot ca>
+
+   ### Added
+      - Add TRAEFIK_FILTER and TRAEFIK_FILTER_LABEL variables to allow setting a label and a value to trigger Cloudflare companion to take action. Useful for running multiple Traefik instances and Cloudflare Companion instances on the same host/cluster
+
+
 ## 7.0.4 2023-03-18 <dave at tiredofit dot ca>
 
    ### Added

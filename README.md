@@ -42,6 +42,7 @@ This will build a Docker image to automatically update [Cloudflare](https://www.
       - [Filtering](#filtering)
         - [Include Patterns](#include-patterns)
         - [Exclude Patterns](#exclude-patterns)
+        - [By Label](#by-label)
 - [Maintenance](#maintenance)
   - [Shell Access](#shell-access)
 - [Support](#support)
@@ -67,11 +68,11 @@ Builds of the image are available on [Docker Hub](https://hub.docker.com/r/tired
 ```bash
 docker pull docker.io/tiredofdit/traefik-cloudflare-companion:(imagetag)
 ```
-Builds of the image are also available on the [Github Container Registry](https://github.com/tiredofit/docker-traefik-cloudflare-companion/pkgs/container/docker-traefik-cloudflare-companion) 
- 
+Builds of the image are also available on the [Github Container Registry](https://github.com/tiredofit/docker-traefik-cloudflare-companion/pkgs/container/docker-traefik-cloudflare-companion)
+
 ```
 docker pull ghcr.io/tiredofit/docker-traefik-cloudflare-companion:(imagetag)
-``` 
+```
 
 The following image tags are available along with their tagged release based on what's written in the [Changelog](CHANGELOG.md):
 
@@ -165,17 +166,19 @@ Be sure to view the following repositories to understand all the customizable op
 
 #### Traefik Options
 
-| Parameter                  | Description                                                                      | Default |
-| -------------------------- | -------------------------------------------------------------------------------- | ------- |
-| `TRAEFIK_VERSION`          | What version of Traefik do you want to work against - `1` or `2`                 | `2`     |
-| `ENABLE_TRAEFIK_POLL`      | Enable Traefik Polling Mode `TRUE` or `FALSE`                                    | `FALSE` |
-| `TRAEFIK_POLL_URL`         | (optional) If using Traefik Polling mode - URL to Traefik API endpoint           |         |
-| `TRAEFIK_POLL_SECONDS`     | (optional) If using Traefik Polling mode - Seconds to delay between poll attemps | `60`    |
-| `TRAEFIK_INCLUDED_HOST1`   | (optional) If using Traefik Polling mode - Regex patterns for hosts to include   | `.*`    |
-| `TRAEFIK_INCLUDED_HOST...` | (optional traefik host include pattern 2 - N)                                    |         |
-| `TRAEFIK_EXCLUDED_HOST1`   | (optional) If using Traefik Polling mode - Regex patterns for hosts to exclude   |         |
-| `TRAEFIK_EXCLUDED_HOST...` | (optional traefik host exclude pattern 2 - N)                                    |         |
-| `REFRESH_ENTRIES`          | If record exists, update entry with new values `TRUE` or `FALSE`                 | `FALSE` |
+| Parameter                  | Description                                                                      | Default              |
+| -------------------------- | -------------------------------------------------------------------------------- | -------------------- |
+| `TRAEFIK_VERSION`          | What version of Traefik do you want to work against - `1` or `2`                 | `2`                  |
+| `ENABLE_TRAEFIK_POLL`      | Enable Traefik Polling Mode `TRUE` or `FALSE`                                    | `FALSE`              |
+| `TRAEFIK_POLL_URL`         | (optional) If using Traefik Polling mode - URL to Traefik API endpoint           |                      |
+| `TRAEFIK_POLL_SECONDS`     | (optional) If using Traefik Polling mode - Seconds to delay between poll attemps | `60`                 |
+| `TRAEFIK_FILTER_LABEL` | (optional) Filter by this label                                                  | `traefik.constraint` |
+| `TRAEFIK_FILTER`       | (optional) Filter by above Label and Value                                                  |                      |
+| `TRAEFIK_INCLUDED_HOST1`   | (optional) If using Traefik Polling mode - Regex patterns for hosts to include   | `.*`                 |
+| `TRAEFIK_INCLUDED_HOST...` | (optional traefik host include pattern 2 - N)                                    |                      |
+| `TRAEFIK_EXCLUDED_HOST1`   | (optional) If using Traefik Polling mode - Regex patterns for hosts to exclude   |                      |
+| `TRAEFIK_EXCLUDED_HOST...` | (optional traefik host exclude pattern 2 - N)                                    |                      |
+| `REFRESH_ENTRIES`          | If record exists, update entry with new values `TRUE` or `FALSE`                 | `FALSE`              |
 
 
 #### Docker Secrets
@@ -233,6 +236,30 @@ Include patterns can be specified by defining one or more `TRAEFIK_INCLUDED_HOST
 ###### Exclude Patterns
 
 Exclude patterns can be specified by defining one or more `TRAEFIK_EXCLUDED_HOST<XXX>` variables such as `TRAEFIK_EXCLUDED_HOST1=private-data\.foobar\.com` and `TRAEFIK_EXCLUDED_HOST2=.*-internal-api\.foobar\.com`.  The pattern is a regular expression that is used to determine if the host should be excluded.  Exclude patterns filter out results after include patterns are executed.
+
+###### By Label
+
+If both `TRAEFIK_FILTER_LABEL` and `TRAEFIK_FILTER` are set only operate on containers with these matching values. This is useful if running multiple copies of Traefik and multiple copies of Cloudflare companion on your system or cluster or to limit acting on specific containers. Example:
+
+````
+TRAEFIK_CONSTRAINT_LABEL=traefik.constraint
+TRAEFIK_CONSTRAINT=proxy-public
+````
+
+In your serving container:
+
+````
+services:
+  nginx:
+    image: tiredofit/nginx:latest
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.nginx.rule=Host(`nginx.example.com`)
+        - ...
+        - traefik.constraint=proxy-public
+````
+
 
 ## Maintenance
 ### Shell Access
