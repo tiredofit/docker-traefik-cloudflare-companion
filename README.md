@@ -42,7 +42,7 @@ This will build a Docker image to automatically update [Cloudflare](https://www.
       - [Filtering](#filtering)
         - [Include Patterns](#include-patterns)
         - [Exclude Patterns](#exclude-patterns)
-        - [By Label](#by-label)
+        - [By Label (Docker Endpoint only)](#by-label-docker-endpoint-only)
 - [Maintenance](#maintenance)
   - [Shell Access](#shell-access)
 - [Support](#support)
@@ -237,7 +237,7 @@ Include patterns can be specified by defining one or more `TRAEFIK_INCLUDED_HOST
 
 Exclude patterns can be specified by defining one or more `TRAEFIK_EXCLUDED_HOST<XXX>` variables such as `TRAEFIK_EXCLUDED_HOST1=private-data\.foobar\.com` and `TRAEFIK_EXCLUDED_HOST2=.*-internal-api\.foobar\.com`.  The pattern is a regular expression that is used to determine if the host should be excluded.  Exclude patterns filter out results after include patterns are executed.
 
-###### By Label
+###### By Label (Docker Endpoint only)
 
 If both `TRAEFIK_FILTER_LABEL` and `TRAEFIK_FILTER` are set only operate on containers with these matching values. This is useful if running multiple copies of Traefik and multiple copies of Cloudflare companion on your system or cluster or to limit acting on specific containers. Example:
 
