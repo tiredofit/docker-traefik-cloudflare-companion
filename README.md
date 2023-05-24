@@ -66,7 +66,7 @@ Clone this repository and build the image with `docker build -t (imagename) .`
 Builds of the image are available on [Docker Hub](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion)
 
 ```bash
-docker pull docker.io/tiredofdit/traefik-cloudflare-companion:(imagetag)
+docker pull docker.io/tiredofit/traefik-cloudflare-companion:(imagetag)
 ```
 Builds of the image are also available on the [Github Container Registry](https://github.com/tiredofit/docker-traefik-cloudflare-companion/pkgs/container/docker-traefik-cloudflare-companion)
 
