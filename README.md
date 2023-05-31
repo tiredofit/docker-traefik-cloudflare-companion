@@ -24,13 +24,20 @@ This builds a Docker image to automatically update Cloudflare DNS records upon c
 - [Installation](#installation)
   - [Build from Source](#build-from-source)
   - [Prebuilt Images](#prebuilt-images)
-    - [Multi Architecture](#multi-archictecture)
+    - [Multi Architecture](#multi-architecture)
 - [Configuration](#configuration)
   - [Quick Start](#quick-start)
   - [Persistent Storage](#persistent-storage)
   - [Environment Variables](#environment-variables)
     - [Base Images used](#base-images-used)
     - [Docker Secrets](#docker-secrets)
+  - [Discovery](#discovery)
+    - [Docker](#docker)
+    - [Docker Swarm](#docker-swarm)
+    - [Traefik Polling](#traefik-polling)
+      - [Filtering](#filtering)
+        - [Include Patterns](#include-patterns)
+        - [Exclude Patterns](#exclude-patterns)
 - [Maintenance](#maintenance)
   - [Shell Access](#shell-access)
 - [Support](#support)
@@ -42,6 +49,7 @@ This builds a Docker image to automatically update Cloudflare DNS records upon c
 - [References](#references)
 
 ## Prerequisites and Assumptions
+*  Assumes you have either a Global or a Scoped API key from Cloudflare.
 *  Assumes you are using Traefik as a reverse proxy:
    *  [Traefik](https://github.com/tiredofit/docker-traefik)
 
@@ -96,7 +104,7 @@ For those wishing to assign multiple CNAMEs to a container use the following for
 
 #### Base Images used
 
-This image relies on an [Alpine Linux](https://hub.docker.com/r/tiredofit/alpine) or [Debian Linux](https://hub.docker.com/r/tiredofit/debian) base image that relies on an [init system](https://github.com/just-containers/s6-overlay) for added capabilities. Outgoing SMTP capabilities are handlded via `msmtp`. Individual container performance monitoring is performed by [zabbix-agent](https://zabbix.org). Additional tools include: `bash`,`curl`,`less`,`logrotate`, `nano`,`vim`.
+This image relies on an [Alpine Linux](https://hub.docker.com/r/tiredofit/alpine) base image that relies on an [init system](https://github.com/just-containers/s6-overlay) for added capabilities. Outgoing SMTP capabilities are handlded via `msmtp`. Individual container performance monitoring is performed by [zabbix-agent](https://zabbix.org). Additional tools include: `bash`,`curl`,`less`,`logrotate`, `nano`,`vim`.
 
 Be sure to view the following repositories to understand all the customizable options:
 
@@ -105,38 +113,38 @@ Be sure to view the following repositories to understand all the customizable op
 | [OS Base](https://github.com/tiredofit/docker-alpine/) | Customized Image based on Alpine Linux |
 
 
-| Parameter           | Description                                                                             | Default                      |
-| ------------------- | --------------------------------------------------------------------------------------- | ---------------------------- |
-| `TRAEFIK_VERSION`   | What version of Traefik do you want to work against - `1` or `2`                        | `2`                          |
-| `DOCKER_ENTRYPOINT` | Docker Entrypoint default (local mode)                                                  | `unix://var/run/docker.sock` |
-| `DOCKER_HOST`       | (optional) If using tcp connection e.g. `tcp://111.222.111.32:2376`                     |                              |
-| `DOCKER_CERT_PATH`  | (optional) If using tcp connection with TLS - Certificate location e.g. `/docker-certs` |                              |
-| `DOCKER_TLS_VERIFY` | (optional) If using tcp conneciton to socket Verify TLS                                 | `1`                          |
-| `REFRESH_ENTRIES`   | If record exists, update entry with new values `TRUE` or `FALSE`                        | `FALSE`                      |
-| `SWARM_MODE`        | Enable Docker Swarm Mode `TRUE` or `FALSE`                                              | `FALSE`                      |
-| `ENABLE_TRAEFIK_POLL`      | Enable Traefik Polling Mode `TRUE` or `FALSE`                                           | `FALSE`                      |
-| `TRAEFIK_POLL_URL`       | (optional) If using Traefik Polling mode - URL to Traefik API endpoint                  |                              |
-| `TRAEFIK_POLL_SECONDS` | (optional) If using Traefik Polling mode - Seconds to delay between poll attemps     | `60`                         |
-| `TRAEFIK_INCLUDED_HOST1` | (optional) If using Traefik Polling mode - Regex patterns for hosts to include          | `.*`                         |
-| `TRAEFIK_INCLUDED_HOST...` | (optional traefik host include pattern 2 - N)                                           |                              |
-| `TRAEFIK_EXCLUDED_HOST1` | (optional) If using Traefik Polling mode - Regex patterns for hosts to exclude          |                              |
-| `TRAEFIK_EXCLUDED_HOST...` | (optional traefik host exclude pattern 2 - N)                                           |                              |
-| `DRY_RUN`           | Enable Dry Run Mode `TRUE` or `FALSE`                                                   | `FALSE`                      | 
-| `CF_EMAIL`          | Email address tied to Cloudflare Account - Leave Blank  for Scoped API                  |                              |
-| `CF_TOKEN`          | API Token for the Domain                                                                |                              |
-| `DEFAULT_TTL`       | TTL to apply to records                                                                 | `1`                          |
-| `TARGET_DOMAIN`     | Destination Host to forward records to e.g. `host.example.com`                          |                              |
-| `DOMAIN1`           | Domain 1 you wish to update records for.                                                |                              |
-| `DOMAIN1_ZONE_ID`   | Domain 1 Zone ID from Cloudflare                                                        |                              |
-| `DOMAIN1_PROXIED`   | Domain 1 True or False if proxied                                                       |                              |
-| `DOMAIN1_TARGET_DOMAIN` | (optional specify target_domain for Domain 1, overriding the default value from TARGET_DOMAIN)                                          |                              |
-| `DOMAIN1_EXCLUDED_SUB_DOMAINS` | (optional specify sub domain trees to be ignored in lables) ex: `DOMAIN1_EXCLUDED_SUB_DOMAINS=int` would not create a CNAME for `*.int.example.com` | |
-| `DOMAIN2`           | (optional Domain 2 you wish to update records for.)                                     |                              |
-| `DOMAIN2_ZONE_ID`   | Domain 2 Zone ID from Cloudflare                                                        |                              |
-| `DOMAIN2_PROXIED`   | Domain 1 True or False if proxied                                                       |                              |
-| `DOMAIN2_TARGET_DOMAIN`   | (optional specify target_domain for Domain 2, overriding the default value from TARGET_DOMAIN)                                     |                              |
-| `DOMAIN2_EXCLUDED_SUB_DOMAINS` | (optional specify sub domain trees to be ignored in lables) ex: `DOMAIN2_EXCLUDED_SUB_DOMAINS=int` would not create a CNAME for `*.int.example2.com` | |
-| `DOMAIN3....`       | And so on..                                                                             |                              |
+| Parameter                      | Description                                                                                                                                          | Default                      |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| `TRAEFIK_VERSION`              | What version of Traefik do you want to work against - `1` or `2`                                                                                     | `2`                          |
+| `DOCKER_ENTRYPOINT`            | Docker Entrypoint default (local mode)                                                                                                               | `unix://var/run/docker.sock` |
+| `DOCKER_HOST`                  | (optional) If using tcp connection e.g. `tcp://111.222.111.32:2376`                                                                                  |                              |
+| `DOCKER_CERT_PATH`             | (optional) If using tcp connection with TLS - Certificate location e.g. `/docker-certs`                                                              |                              |
+| `DOCKER_TLS_VERIFY`            | (optional) If using tcp conneciton to socket Verify TLS                                                                                              | `1`                          |
+| `REFRESH_ENTRIES`              | If record exists, update entry with new values `TRUE` or `FALSE`                                                                                     | `FALSE`                      |
+| `SWARM_MODE`                   | Enable Docker Swarm Mode `TRUE` or `FALSE`                                                                                                           | `FALSE`                      |
+| `ENABLE_TRAEFIK_POLL`          | Enable Traefik Polling Mode `TRUE` or `FALSE`                                                                                                        | `FALSE`                      |
+| `TRAEFIK_POLL_URL`             | (optional) If using Traefik Polling mode - URL to Traefik API endpoint                                                                               |                              |
+| `TRAEFIK_POLL_SECONDS`         | (optional) If using Traefik Polling mode - Seconds to delay between poll attemps                                                                     | `60`                         |
+| `TRAEFIK_INCLUDED_HOST1`       | (optional) If using Traefik Polling mode - Regex patterns for hosts to include                                                                       | `.*`                         |
+| `TRAEFIK_INCLUDED_HOST...`     | (optional traefik host include pattern 2 - N)                                                                                                        |                              |
+| `TRAEFIK_EXCLUDED_HOST1`       | (optional) If using Traefik Polling mode - Regex patterns for hosts to exclude                                                                       |                              |
+| `TRAEFIK_EXCLUDED_HOST...`     | (optional traefik host exclude pattern 2 - N)                                                                                                        |                              |
+| `DRY_RUN`                      | Enable Dry Run Mode `TRUE` or `FALSE`                                                                                                                | `FALSE`                      |
+| `CF_EMAIL`                     | Email address tied to Cloudflare Account - Leave Blank  for Scoped API                                                                               |                              |
+| `CF_TOKEN`                     | API Token for the Domain                                                                                                                             |                              |
+| `DEFAULT_TTL`                  | TTL to apply to records                                                                                                                              | `1`                          |
+| `TARGET_DOMAIN`                | Destination Host to forward records to e.g. `host.example.com`                                                                                       |                              |
+| `DOMAIN1`                      | Domain 1 you wish to update records for.                                                                                                             |                              |
+| `DOMAIN1_ZONE_ID`              | Domain 1 Zone ID from Cloudflare                                                                                                                     |                              |
+| `DOMAIN1_PROXIED`              | Domain 1 True or False if proxied                                                                                                                    |                              |
+| `DOMAIN1_TARGET_DOMAIN`        | (optional specify target_domain for Domain 1, overriding the default value from TARGET_DOMAIN)                                                       |                              |
+| `DOMAIN1_EXCLUDED_SUB_DOMAINS` | (optional specify sub domain trees to be ignored in lables) ex: `DOMAIN1_EXCLUDED_SUB_DOMAINS=int` would not create a CNAME for `*.int.example.com`  |                              |
+| `DOMAIN2`                      | (optional Domain 2 you wish to update records for.)                                                                                                  |                              |
+| `DOMAIN2_ZONE_ID`              | Domain 2 Zone ID from Cloudflare                                                                                                                     |                              |
+| `DOMAIN2_PROXIED`              | Domain 1 True or False if proxied                                                                                                                    |                              |
+| `DOMAIN2_TARGET_DOMAIN`        | (optional specify target_domain for Domain 2, overriding the default value from TARGET_DOMAIN)                                                       |                              |
+| `DOMAIN2_EXCLUDED_SUB_DOMAINS` | (optional specify sub domain trees to be ignored in lables) ex: `DOMAIN2_EXCLUDED_SUB_DOMAINS=int` would not create a CNAME for `*.int.example2.com` |                              |
+| `DOMAIN3....`                  | And so on..                                                                                                                                          |                              |
 
 #### Docker Secrets
 
@@ -197,10 +205,10 @@ cloudflare-companion will discover running Docker containers by searching for su
 
 The supported labels are:
 
-| Traefik Version  |  Single Host  |  Multiple Host  |
-| ---------------- | ------------- | --------------- |
-| 1                | `traefik.normal.frontend.rule=Host:example1.domain.tld` | `traefik.normal.frontend.rule=Host:example1.domain.tld,example2.domain.tld` |
-| 2                | ``traefik.http.routers.example.rule=Host(`example1.domain.tld`)`` | ``traefik.http.routers.example.rule=Host(`example1.domain.tld`) || Host(`example2.domain.tld`)`` |
+| Traefik Version | Single Host                                                       | Multiple Host                                                               |
+| --------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 1               | `traefik.normal.frontend.rule=Host:example1.domain.tld`           | `traefik.normal.frontend.rule=Host:example1.domain.tld,example2.domain.tld` |
+| 2               | ``traefik.http.routers.example.rule=Host(`example1.domain.tld`)`` | ``traefik.http.routers.example.rule=Host(`example1.domain.tld`)             |  | Host(`example2.domain.tld`)`` |
 
 #### Docker Swarm
 
@@ -208,10 +216,10 @@ Docker Swarm mode can be enabled by setting the environment variable `SWARM_MODE
 
 The supported labels are:
 
-| Traefik Version  |  Single Host  |  Multiple Host  |
-| ---------------- | ------------- | --------------- |
-| 1                | `traefik.normal.frontend.rule=Host:example1.domain.tld` | `traefik.normal.frontend.rule=Host:example1.domain.tld,example2.domain.tld` |
-| 2                | ``traefik.http.routers.example.rule=Host(`example1.domain.tld`)`` | ``traefik.http.routers.example.rule=Host(`example1.domain.tld`) || Host(`example2.domain.tld`)`` |
+| Traefik Version | Single Host                                                       | Multiple Host                                                               |
+| --------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 1               | `traefik.normal.frontend.rule=Host:example1.domain.tld`           | `traefik.normal.frontend.rule=Host:example1.domain.tld,example2.domain.tld` |
+| 2               | ``traefik.http.routers.example.rule=Host(`example1.domain.tld`)`` | ``traefik.http.routers.example.rule=Host(`example1.domain.tld`)             |  | Host(`example2.domain.tld`)`` |
 
 #### Traefik Polling
 
@@ -266,6 +274,7 @@ These images were built to serve a specific need in a production environment and
 
 ## License
 MIT. See [LICENSE](LICENSE) for more details.
+
 ## References
 
 * https://www.cloudflare.com

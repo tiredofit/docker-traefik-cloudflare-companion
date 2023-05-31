@@ -433,33 +433,32 @@ def check_traefik(included_hosts, excluded_hosts):
         if r.ok:
             for router in r.json():
                 if "status" in router and router["status"] == "enabled":
-                    if "provider" in router and router["provider"] != "docker":
-                        if "name" in router and "rule" in router:
-                            name = router["name"]
-                            value = router["rule"]
-                            if 'Host' in value:
-                                logger.debug("Traefik Router Name: %s rule value: %s", name, value)
-                                extracted_domains = re.findall(r'Host\(\`([a-zA-Z0-9\.\-]+)\`\)', value)
-                                logger.debug("Traefik Router Name: %s extracted domains from rule: %s", name, extracted_domains)
-                                if len(extracted_domains) > 1:
-                                    for v in extracted_domains:
-                                        if is_matching(v, included_hosts):
-                                            if is_matching(v, excluded_hosts):
-                                                logger.debug("Traefik Router Name: %s with Multi-Hostname %s - Matched Exclude", name, v)
-                                            else:
-                                                logger.info("Found Traefik Router Name: %s with Multi-Hostname %s", name, v)
-                                                mappings[v] = 2
+                    if "name" in router and "rule" in router:
+                        name = router["name"]
+                        value = router["rule"]
+                        if 'Host' in value:
+                            logger.debug("Traefik Router Name: %s rule value: %s", name, value)
+                            extracted_domains = re.findall(r'Host\(\`([a-zA-Z0-9\.\-]+)\`\)', value)
+                            logger.debug("Traefik Router Name: %s extracted domains from rule: %s", name, extracted_domains)
+                            if len(extracted_domains) > 1:
+                                for v in extracted_domains:
+                                    if is_matching(v, included_hosts):
+                                        if is_matching(v, excluded_hosts):
+                                            logger.debug("Traefik Router Name: %s with Multi-Hostname %s - Matched Exclude", name, v)
                                         else:
-                                            logger.debug("Traefik Router Name: %s with Multi-Hostname %s: Not Match Include", name, v)
-                                elif len(extracted_domains) == 1:
-                                    if is_matching(extracted_domains[0], included_hosts):
-                                        if is_matching(extracted_domains[0], excluded_hosts):
-                                            logger.debug("Traefik Router Name: %s with Hostname %s - Matched Exclude", name, extracted_domains[0])
-                                        else:
-                                            logger.info("Found Traefik Router Name: %s with Hostname %s", name, extracted_domains[0])
-                                            mappings[extracted_domains[0]] = 2
+                                            logger.info("Found Traefik Router Name: %s with Multi-Hostname %s", name, v)
+                                            mappings[v] = 2
                                     else:
-                                        logger.debug("Traefik Router Name: %s with Hostname %s: Not Match Include", name, extracted_domains[0])
+                                        logger.debug("Traefik Router Name: %s with Multi-Hostname %s: Not Match Include", name, v)
+                            elif len(extracted_domains) == 1:
+                                if is_matching(extracted_domains[0], included_hosts):
+                                    if is_matching(extracted_domains[0], excluded_hosts):
+                                        logger.debug("Traefik Router Name: %s with Hostname %s - Matched Exclude", name, extracted_domains[0])
+                                    else:
+                                        logger.info("Found Traefik Router Name: %s with Hostname %s", name, extracted_domains[0])
+                                        mappings[extracted_domains[0]] = 2
+                                else:
+                                    logger.debug("Traefik Router Name: %s with Hostname %s: Not Match Include", name, extracted_domains[0])
 
     return mappings
 
@@ -522,11 +521,32 @@ def uri_valid(x):
     except:
         return False
 
+def get_secret_by_env(envvar_name):
+    secret_value:str
+    envvar_secret_name=envvar_name + "_FILE"
+    envvar_secret_value=os.getenv(envvar_secret_name)
+    if envvar_secret_value:
+        secret_value = get_docker_secret(envvar_secret_value, secrets_dir='/', autocast_name=False, getenv=False)
+    else:
+        # fallback check for original environment variable
+        secret_value = get_docker_secret(envvar_name, autocast_name=False, getenv=True)
+    if secret_value:
+        logger.debug("Setting environment variable '%s' by docker secret '%s'.", envvar_name, envvar_secret_name)
+        os.environ[envvar_name] = secret_value
+        return secret_value
 
 try:
     # Check for uppercase docker secrets or env variables
-    email = get_docker_secret('CF_EMAIL', autocast_name=False, getenv=True)
-    token = get_docker_secret('CF_TOKEN', autocast_name=False, getenv=True)
+    email = get_secret_by_env('CF_EMAIL')
+    token = get_secret_by_env('CF_TOKEN')
+
+    # Check for any cf zone id based on the respective domain env var existing
+    RX_DOMS = re.compile('^DOMAIN[0-9]+$', re.IGNORECASE)
+    for env in os.environ:
+        if not RX_DOMS.match(env):
+            continue
+
+        get_secret_by_env("{}_ZONE_ID".format(env))
 
     # Check for lowercase docker secrets
     if not email:
@@ -591,7 +611,8 @@ logger.debug("Traefik Polling Mode: %s", False)
 client = docker.from_env()
 
 if SWARM_MODE:
-    api = docker.APIClient()
+    DOCKER_HOST = os.environ.get('DOCKER_HOST', None)
+    api = docker.APIClient(base_url=DOCKER_HOST)
 
 doms = init_doms_from_env()
 traefik_included_hosts, traefik_excluded_hosts = init_traefik_from_env()

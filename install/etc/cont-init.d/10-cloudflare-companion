@@ -7,6 +7,5 @@ PROCESS_NAME="traefik-cloudflare-companion"
 ### Sanity Test
 sanity_var TARGET_DOMAIN "Target Domain"
 sanity_var DOMAIN1 "Domain 1"
-sanity_var DOMAIN1_ZONE_ID "Domain 1 Zone ID"
 
 liftoff

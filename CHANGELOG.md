@@ -1,9 +1,37 @@
-## 6.8.6 2022-08-27 <contato at ersolucoesweb dot com dot br>
+## 6.10.0 2022-12-14 <dave at tiredofit dot ca>
 
    ### Added
-      - Labels to control records
+      - Add _FILE environment variables for secrets. Credit to DennisGaida@github for doing the work.
 
-      
+
+## 6.9.3 2022-12-01 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Rework Dockerfile
+
+
+## 6.9.2 2022-11-23 <dave at tiredofit dot ca>
+
+   ### Added
+      - Alpine 3.17 base
+
+
+## 6.9.1 2022-10-27 <dave at tiredofit dot ca>
+
+   ### Added
+      - Add py3-packaging module into run dependencies (#80)
+
+
+## 6.9.0 2022-10-26 <dave at tiredofit dot ca>
+
+   ### Added
+      - Allow SWARM_MODE to work with a daemon proxy. Credit to mistressmeeple@github
+      - Add support for defaultRule to pull from Traefik as opposed to just labels. Credit to mistressmeeple@github
+
+## 6.8.6 2022-08-27 <contato at ersolucoesweb dot com dot br>
+
+    ### Added
+      - Labels to control records
 ## 6.8.5 2022-05-24 <dave at tiredofit dot ca>
 
    ### Added
