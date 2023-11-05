@@ -150,7 +150,8 @@ Be sure to view the following repositories to understand all the customizable op
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `CF_EMAIL`                     | Email address tied to Cloudflare Account - Leave Blank for Scoped API                                                                                |         |
 | `CF_TOKEN`                     | API Token for the Domain                                                                                                                             |         |
-| `TARGET_DOMAIN`                | Destination Host to forward records to e.g. `host.example.com`                                                                                       |         |
+| `RC_TYPE`                      | Record Type for The Cloudflare e.g. `A;CNAME;AAAA`                                                                                                   |         |
+| `TARGET_DOMAIN`                | Destination Hostname/IP to forward records to e.g. `host.example.com or 172.30.0.1`                                                                  |         |
 | `DOMAIN1`                      | Domain 1 you wish to update records for.                                                                                                             |         |
 | `DOMAIN1_ZONE_ID`              | Domain 1 Zone ID from Cloudflare                                                                                                                     |         |
 | `DOMAIN1_PROXIED`              | Domain 1 True or False if proxied                                                                                                                    |         |
@@ -172,8 +173,8 @@ Be sure to view the following repositories to understand all the customizable op
 | `ENABLE_TRAEFIK_POLL`      | Enable Traefik Polling Mode `TRUE` or `FALSE`                                    | `FALSE`              |
 | `TRAEFIK_POLL_URL`         | (optional) If using Traefik Polling mode - URL to Traefik API endpoint           |                      |
 | `TRAEFIK_POLL_SECONDS`     | (optional) If using Traefik Polling mode - Seconds to delay between poll attemps | `60`                 |
-| `TRAEFIK_FILTER_LABEL` | (optional) Filter by this label                                                  | `traefik.constraint` |
-| `TRAEFIK_FILTER`       | (optional) Filter by above Label and Value                                                  |                      |
+| `TRAEFIK_FILTER_LABEL`     | (optional) Filter by this label                                                  | `traefik.constraint` |
+| `TRAEFIK_FILTER`           | (optional) Filter by above Label and Value                                       |                      |
 | `TRAEFIK_INCLUDED_HOST1`   | (optional) If using Traefik Polling mode - Regex patterns for hosts to include   | `.*`                 |
 | `TRAEFIK_INCLUDED_HOST...` | (optional traefik host include pattern 2 - N)                                    |                      |
 | `TRAEFIK_EXCLUDED_HOST1`   | (optional) If using Traefik Polling mode - Regex patterns for hosts to exclude   |                      |

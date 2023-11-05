@@ -34,6 +34,7 @@ TRAEFIK_FILTER_LABEL = os.environ.get('TRAEFIK_FILTER_LABEL', "traefik.constrain
 TRAEFIK_POLL_SECONDS = int(os.environ.get('TRAEFIK_POLL_SECONDS', "60"))
 TRAEFIK_POLL_URL = os.environ.get('TRAEFIK_POLL_URL', None)
 TRAEFIK_VERSION = os.environ.get('TRAEFIK_VERSION', "2")
+RC_TYPE = os.environ.get('RC_TYPE', "CNAME")
 
 
 # Handle Ctrl C
@@ -161,7 +162,7 @@ def is_matching(host, regexes):
             return True
     return False
 
-
+# Start Program to update the Cloudflare
 def point_domain(name, domain_infos):
     ok = True
     for domain_info in domain_infos:
@@ -174,7 +175,7 @@ def point_domain(name, domain_infos):
 
             records = cf.zones.dns_records.get(domain_info['zone_id'], params={u'name': name})
             data = {
-                u'type': u'CNAME',
+                u'type': RC_TYPE,
                 u'name': name,
                 u'content': domain_info['target_domain'],
                 u'ttl': domain_info['ttl'],
@@ -210,7 +211,6 @@ def point_domain(name, domain_infos):
                     logger.error('** %s - %d %s' % (name, ex, ex))
                     ok = False
     return ok
-
 
 def check_container_t1(c):
     def label_host():
