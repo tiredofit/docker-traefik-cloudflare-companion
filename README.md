@@ -150,7 +150,7 @@ Be sure to view the following repositories to understand all the customizable op
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `CF_EMAIL`                     | Email address tied to Cloudflare Account - Leave Blank for Scoped API                                                                                |         |
 | `CF_TOKEN`                     | API Token for the Domain                                                                                                                             |         |
-| `RC_TYPE`                      | Record Type for The Cloudflare e.g. `A;CNAME;AAAA`                                                                                                   |         |
+| `RC_TYPE`                      | Record Type for The Cloudflare e.g. `A;CNAME;AAAA`                                                                                                   |  CNAME  |
 | `TARGET_DOMAIN`                | Destination Hostname/IP to forward records to e.g. `host.example.com or 172.30.0.1`                                                                  |         |
 | `DOMAIN1`                      | Domain 1 you wish to update records for.                                                                                                             |         |
 | `DOMAIN1_ZONE_ID`              | Domain 1 Zone ID from Cloudflare                                                                                                                     |         |
