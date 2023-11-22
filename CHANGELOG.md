@@ -1,4 +1,4 @@
-## 7.2.0 2023-11-22 <rezytiji@github>
+## 7.2.0 2023-11-22 <rezytijo@github>
 
    ### Added
       - Add RC_TYPE support - Choose whether CNAMES,A,or AAAA records are created
