@@ -1,3 +1,9 @@
+## 7.2.0 2023-11-22 <rezytiji@github>
+
+   ### Added
+      - Add RC_TYPE support - Choose whether CNAMES,A,or AAAA records are created
+
+
 ## 7.1.1 2023-05-10 <dave at tiredofit dot ca>
 
    ### Changed
