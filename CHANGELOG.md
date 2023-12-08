@@ -1,3 +1,9 @@
+## 7.2.2 2023-12-08 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Break system packages with python
+
+
 ## 7.2.1 2023-12-08 <dave at tiredofit dot ca>
 
    ### Added

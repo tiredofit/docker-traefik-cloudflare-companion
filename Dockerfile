@@ -50,7 +50,7 @@ RUN source /assets/functions/00-container && \
                 python3 \
                 && \
     \
-    pip install \
+    pip --break-system-packages install \
             cloudflare \
             get-docker-secret \
             requests \
