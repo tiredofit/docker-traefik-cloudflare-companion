@@ -51,7 +51,7 @@ RUN source /assets/functions/00-container && \
                 && \
     \
     pip --break-system-packages install \
-            cloudflare \
+            cloudflare==2.19.* \
             get-docker-secret \
             requests \
             && \

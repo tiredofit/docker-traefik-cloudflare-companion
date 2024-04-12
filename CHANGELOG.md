@@ -1,3 +1,9 @@
+## 7.2.3 2024-04-12 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Pin Cloudflare dependency to 2.19.* due to imminent 3.x release
+
+
 ## 7.2.2 2023-12-08 <dave at tiredofit dot ca>
 
    ### Changed
