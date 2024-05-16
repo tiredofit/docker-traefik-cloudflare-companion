@@ -99,6 +99,7 @@ def init_doms_from_env():
                 'zone_id': os.environ["{}_ZONE_ID".format(k)],
                 'ttl': os.environ.get("{}_TTL".format(k), DEFAULT_TTL),
                 'target_domain': os.environ.get("{}_TARGET_DOMAIN".format(k), target_domain),
+                'comment': os.environ.get("{}_COMMENT".format(k)),
                 'excluded_sub_domains': list(filter(None, os.environ.get("{}_EXCLUDED_SUB_DOMAINS".format(k), "").split(','))),
             }
 
@@ -180,6 +181,7 @@ def point_domain(name, domain_infos):
                 u'content': domain_info['target_domain'],
                 u'ttl': domain_info['ttl'],
                 u'proxied': domain_info['proxied']
+                u'comment': domain_info['comment']
             }
             if REFRESH_ENTRIES:
                 try:
