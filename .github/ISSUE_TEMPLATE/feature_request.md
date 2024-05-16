@@ -16,7 +16,7 @@ about: Suggest an idea for this project
 **Description of the feature**
 <!-- A clear description of the feature you'd like implemented  -->
 
-**Benftits of feature**
+**Benefits of feature**
 <!-- Explain the measurable benefits this feature would achieve. -->
 
 **Additional context**
