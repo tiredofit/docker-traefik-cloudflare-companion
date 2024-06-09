@@ -1,6 +1,6 @@
 services:
   cloudflare-companion:
-    image: tiredofit/traefik-cloudflare-companion
+    image: Flappje/traefik-cloudflare-companion
     container_name: cloudflare-companion
     volumes:
       - ./logs:/logs

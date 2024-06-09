@@ -1,19 +1,17 @@
-# github.com/tiredofit/docker-traefik-cloudflare-companion
+# github.com/Flappje/docker-traefik-cloudflare-companion
 
-[![GitHub release](https://img.shields.io/github/v/tag/tiredofit/docker-traefik-cloudflare-companion?style=flat-square)](https://github.com/tiredofit/docker-traefik-cloudflare-companion/releases/latest)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/tiredofit/docker-traefik-cloudflare-companionmain.yml?branch=main&style=flat-square)](https://github.com/tiredofit/docker-traefik-cloudflare-companion.git/actions)
-[![Docker Stars](https://img.shields.io/docker/stars/tiredofit/traefik-cloudflare-companion.svg?style=flat-square&logo=docker)](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion/)
-[![Docker Pulls](https://img.shields.io/docker/pulls/tiredofit/traefik-cloudflare-companion.svg?style=flat-square&logo=docker)](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion/)
-[![Become a sponsor](https://img.shields.io/badge/sponsor-tiredofit-181717.svg?logo=github&style=flat-square)](https://github.com/sponsors/tiredofit)
-[![Paypal Donate](https://img.shields.io/badge/donate-paypal-00457c.svg?logo=paypal&style=flat-square)](https://www.paypal.me/tiredofit)
+[![GitHub release](https://img.shields.io/github/v/tag/Flappje/docker-traefik-cloudflare-companion?style=flat-square)](https://github.com/Flappje/docker-traefik-cloudflare-companion/releases/latest)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/Flappje/docker-traefik-cloudflare-companionmain.yml?branch=main&style=flat-square)](https://github.com/Flappje/docker-traefik-cloudflare-companion.git/actions)
+[![Docker Stars](https://img.shields.io/docker/stars/Flappje/traefik-cloudflare-companion.svg?style=flat-square&logo=docker)](https://hub.docker.com/r/Flappje/traefik-cloudflare-companion/)
+[![Docker Pulls](https://img.shields.io/docker/pulls/Flappje/traefik-cloudflare-companion.svg?style=flat-square&logo=docker)](https://hub.docker.com/r/Flappje/traefik-cloudflare-companion/)
+[![Become a sponsor](https://img.shields.io/badge/sponsor-Flappje-181717.svg?logo=github&style=flat-square)](https://github.com/sponsors/Flappje)
+[![Paypal Donate](https://img.shields.io/badge/donate-paypal-00457c.svg?logo=paypal&style=flat-square)](https://www.paypal.me/Flappje)
 
 ## About
 
 This will build a Docker image to automatically update [Cloudflare](https://www.cloudflare.com/) DNS records upon container start when using [Traefik](https://github.com/traefik/traefik) as a Reverse Proxy.
 
 ## Maintainer
-
-- [Dave Conroy](http://github/tiredofit/)
 
 ## Table of Contents
 
@@ -63,15 +61,15 @@ This will build a Docker image to automatically update [Cloudflare](https://www.
 Clone this repository and build the image with `docker build -t (imagename) .`
 
 ### Prebuilt Images
-Builds of the image are available on [Docker Hub](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion)
+Builds of the image are available on [Docker Hub](https://hub.docker.com/r/Flappje/traefik-cloudflare-companion)
 
 ```bash
-docker pull docker.io/tiredofit/traefik-cloudflare-companion:(imagetag)
+docker pull docker.io/Flappje/traefik-cloudflare-companion:(imagetag)
 ```
-Builds of the image are also available on the [Github Container Registry](https://github.com/tiredofit/docker-traefik-cloudflare-companion/pkgs/container/docker-traefik-cloudflare-companion)
+Builds of the image are also available on the [Github Container Registry](https://github.com/Flappje/docker-traefik-cloudflare-companion/pkgs/container/docker-traefik-cloudflare-companion)
 
 ```
-docker pull ghcr.io/tiredofit/docker-traefik-cloudflare-companion:(imagetag)
+docker pull ghcr.io/Flappje/docker-traefik-cloudflare-companion:(imagetag)
 ```
 
 The following image tags are available along with their tagged release based on what's written in the [Changelog](CHANGELOG.md):
@@ -81,7 +79,7 @@ The following image tags are available along with their tagged release based on 
 | Alpine       | `:latest` |
 
 #### Multi Architecture
-Images are built primarily for `amd64` architecture, and may also include builds for `arm/v6`, `arm/v7`, `arm64` and others. These variants are all unsupported. Consider [sponsoring](https://github.com/sponsors/tiredofit) my work so that I can work with various hardware. To see if this image supports multiple architecures, type `docker manifest (image):(tag)`
+Images are built primarily for `amd64` architecture, and may also include builds for `arm/v6`, `arm/v7`, `arm64` and others. These variants are all unsupported. Consider [sponsoring](https://github.com/sponsors/Flappje) my work so that I can work with various hardware. To see if this image supports multiple architecures, type `docker manifest (image):(tag)`
 
 ## Configuration
 
@@ -115,13 +113,13 @@ For those wishing to assign multiple CNAMEs to a container use the following for
 
 #### Base Images used
 
-This image relies on an [Alpine Linux](https://hub.docker.com/r/tiredofit/alpine) base image that relies on an [init system](https://github.com/just-containers/s6-overlay) for added capabilities. Outgoing SMTP capabilities are handlded via `msmtp`. Individual container performance monitoring is performed by [zabbix-agent](https://zabbix.org). Additional tools include: `bash`,`curl`,`less`,`logrotate`, `nano`.
+This image relies on an [Alpine Linux](https://hub.docker.com/r/Flappje/alpine) base image that relies on an [init system](https://github.com/just-containers/s6-overlay) for added capabilities. Outgoing SMTP capabilities are handlded via `msmtp`. Individual container performance monitoring is performed by [zabbix-agent](https://zabbix.org). Additional tools include: `bash`,`curl`,`less`,`logrotate`, `nano`.
 
 Be sure to view the following repositories to understand all the customizable options:
 
 | Image                                                  | Description                            |
 | ------------------------------------------------------ | -------------------------------------- |
-| [OS Base](https://github.com/tiredofit/docker-alpine/) | Customized Image based on Alpine Linux |
+| [OS Base](https://github.com/Flappje/docker-alpine/) | Customized Image based on Alpine Linux |
 
 #### Container Options
 
@@ -252,7 +250,7 @@ In your serving container:
 ````
 services:
   nginx:
-    image: tiredofit/nginx:latest
+    image: Flappje/nginx:latest
     deploy:
       labels:
         - traefik.enable=true
@@ -276,18 +274,18 @@ docker exec -it (whatever your container name is e.g. traefik-cloudflare-compani
 These images were built to serve a specific need in a production environment and gradually have had more functionality added based on requests from the community.
 ### Usage
 - The [Discussions board](../../discussions) is a great place for working with the community on tips and tricks of using this image.
-- [Sponsor me](https://tiredofit.ca/sponsor) for personalized support.
+- [Sponsor me](https://Flappje.ca/sponsor) for personalized support.
 
 ### Bugfixes
 - Please, submit a [Bug Report](issues/new) if something isn't working as expected. I'll do my best to issue a fix in short order.
 
 ### Feature Requests
 - Feel free to submit a feature request, however there is no guarantee that it will be added, or at what timeline.
-- [Sponsor me](https://tiredofit.ca/sponsor) regarding development of features.
+- [Sponsor me](https://Flappje.ca/sponsor) regarding development of features.
 
 ### Updates
 - Best effort to track upstream changes, More priority if I am actively using the image in a production environment.
-- [Sponsor me](https://tiredofit.ca/sponsor) for up to date releases.
+- [Sponsor me](https://Flappje.ca/sponsor) for up to date releases.
 
 ## License
 MIT. See [LICENSE](LICENSE) for more details.
@@ -295,5 +293,5 @@ MIT. See [LICENSE](LICENSE) for more details.
 ## References
 
 * https://www.cloudflare.com
-* https://github.com/tiredofit/docker-traefik-cloudflare-companion
+* https://github.com/Flappje/docker-traefik-cloudflare-companion
 * https://github.com/code5-lab/dns-flare
