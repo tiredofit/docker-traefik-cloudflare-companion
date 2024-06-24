@@ -20,7 +20,7 @@ import threading
 from urllib.parse import urlparse
 
 DRY_RUN = os.environ.get('DRY_RUN', "FALSE")
-DEFAULT_TTL = os.environ.get('DEFAULT_TTL', "1")
+DEFAULT_TTL = int(os.environ.get('DEFAULT_TTL', "1"))
 ENABLE_DOCKER_POLL = os.environ.get('ENABLE_DOCKER_POLL', "TRUE")
 DOCKER_SWARM_MODE = os.environ.get('DOCKER_SWARM_MODE', "FALSE")
 ENABLE_TRAEFIK_POLL = os.environ.get('ENABLE_TRAEFIK_POLL', "FALSE")
@@ -97,7 +97,7 @@ def init_doms_from_env():
                 'name': name,
                 'proxied': os.environ.get("{}_PROXIED".format(k), "FALSE").upper() == "TRUE",
                 'zone_id': os.environ["{}_ZONE_ID".format(k)],
-                'ttl': os.environ.get("{}_TTL".format(k), DEFAULT_TTL),
+                'ttl': int(os.environ.get("{}_TTL".format(k), DEFAULT_TTL)),
                 'target_domain': os.environ.get("{}_TARGET_DOMAIN".format(k), target_domain),
                 'excluded_sub_domains': list(filter(None, os.environ.get("{}_EXCLUDED_SUB_DOMAINS".format(k), "").split(','))),
             }
@@ -178,7 +178,7 @@ def point_domain(name, domain_infos):
                 u'type': RC_TYPE,
                 u'name': name,
                 u'content': domain_info['target_domain'],
-                u'ttl': domain_info['ttl'],
+                u'ttl': int(domain_info['ttl']),
                 u'proxied': domain_info['proxied']
             }
             if REFRESH_ENTRIES:
