@@ -1,3 +1,13 @@
+## 7.2.4 2024-06-24 <dave at tiredofit dot ca>
+
+   ### Added
+      - Alpine 3.20 base
+      - Python 3.12
+
+   ### Changed
+      - Force integer type to be integers as opposed to string to solve Cloudflare strict type API rejections - (#103) - Thanks @appiekap653
+
+
 ## 7.2.3 2024-04-12 <dave at tiredofit dot ca>
 
    ### Changed
