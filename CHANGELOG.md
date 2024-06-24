@@ -1,3 +1,9 @@
+## 7.3.0 2024-06-24 <dave at tiredofit dot ca>
+
+   ### Added
+      - Add ability to add comments to records upon creation - Thanks to LelouBil
+
+
 ## 7.2.4 2024-06-24 <dave at tiredofit dot ca>
 
    ### Added
