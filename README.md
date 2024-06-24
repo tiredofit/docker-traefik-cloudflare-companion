@@ -163,7 +163,7 @@ Be sure to view the following repositories to understand all the customizable op
 | `DOMAIN2_TARGET_DOMAIN`        | (optional specify target_domain for Domain 2, overriding the default value from TARGET_DOMAIN)                                                       |         |
 | `DOMAIN2_EXCLUDED_SUB_DOMAINS` | (optional specify sub domain trees to be ignored in lables) ex: `DOMAIN2_EXCLUDED_SUB_DOMAINS=int` would not create a CNAME for `*.int.example2.com` |         |
 | `DOMAIN3....`                  | And so on..                                                                                                                                          |         |
-| `DEFAULT_TTL`                  | TTL to apply to records                                                                                                                              | `1`     |
+| `DEFAULT_TTL`                  | TTL to apply to records (1 = automatic, valid values: 60-86400 or 30-86400 for enterprise)                                                           | `1`     |
 
 #### Traefik Options
 
