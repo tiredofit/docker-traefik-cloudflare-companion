@@ -180,7 +180,7 @@ def point_domain(name, domain_infos):
                 u'name': name,
                 u'content': domain_info['target_domain'],
                 u'ttl': int(domain_info['ttl']),
-                u'proxied': domain_info['proxied']
+                u'proxied': domain_info['proxied'],
                 u'comment': domain_info['comment']
             }
             if REFRESH_ENTRIES:

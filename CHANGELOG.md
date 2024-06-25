@@ -1,3 +1,9 @@
+## 7.3.1 2024-06-24 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Fix for 7.3.0 release
+
+
 ## 7.3.0 2024-06-24 <dave at tiredofit dot ca>
 
    ### Added
