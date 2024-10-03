@@ -353,7 +353,7 @@ def check_traefik(included_hosts, excluded_hosts):
     mappings = {}
     logger.debug("Called check_traefik")
     if TRAEFIK_VERSION == "2":
-        r = requests.get("{}/api/http/routers".format(TRAEFIK_POLL_URL))
+        r = requests.get("{}/api/http/routers".format(TRAEFIK_POLL_URL), Verify=False)
         if r.ok:
             for router in r.json():
                 if "status" in router and router["status"] == "enabled":
