@@ -1,3 +1,10 @@
+## 7.3.2 2024-10-03 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Fix invalid escape sequence errors #107 - Credit juchong@github
+      - Pin to tiredofit/alpine:3.20-7.10.15
+
+
 ## 7.3.1 2024-06-24 <dave at tiredofit dot ca>
 
    ### Changed
