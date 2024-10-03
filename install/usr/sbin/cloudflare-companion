@@ -286,7 +286,7 @@ def check_container_t2(c):
     def label_host():
         for prop in c.attrs.get(u'Config').get(u'Labels'):
             value = c.attrs.get(u'Config').get(u'Labels').get(prop)
-            if re.match('traefik.*?\.rule', prop):
+            if re.match(r'traefik.*?\.rule', prop):
                 if 'Host' in value:
                     logger.debug("Container ID: %s rule value: %s", cont_id, value)
                     extracted_domains = re.findall(r'\`([a-zA-Z0-9\.\-]+)\`', value)
@@ -319,7 +319,7 @@ def check_service_t2(s):
     def label_host():
         for prop in s.attrs.get(u'Spec').get(u'Labels'):
            value = s.attrs.get(u'Spec').get(u'Labels').get(prop)
-           if re.match('traefik.*?\.rule', prop):
+           if re.match(r'traefik.*?\.rule', prop):
                if 'Host' in value:
                    logger.debug("Service ID: %s rule value: %s", cont_id, value)
                    extracted_domains = re.findall(r'\`([a-zA-Z0-9\.\-]+)\`', value)
