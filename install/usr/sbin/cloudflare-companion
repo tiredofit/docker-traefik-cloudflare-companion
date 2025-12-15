@@ -196,7 +196,7 @@ def point_domain(name, domain_infos):
                     for record in records:
                         if record.content != domain_info['target_domain'] or REFRESH_ENTRIES:
                             if DRY_RUN:
-                                logger.info("DRY-RUN: PUT to Cloudflare %s, %s:, %s", domain_info['zone_id'], record["id"], data)
+                                logger.info("DRY-RUN: PUT to Cloudflare %s, %s:, %s", domain_info['zone_id'], record.id, data)
                             else:
                                 cf.dns.records.update(zone_id=domain_info['zone_id'], dns_record_id=record.id, **data)
                                 logger.info("Updated existing record: %s to point to %s", name, domain_info['target_domain'])
