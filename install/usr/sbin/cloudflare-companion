@@ -559,38 +559,39 @@ logger.debug("Time: %s", t)
 if ENABLE_DOCKER_POLL:
     forever=0
     while (forever < 777):
-        for event in client.events(since=t, filters={'Type': 'service', 'Action': u'update', 'status': u'start'}, decode=True):
+        for event in client.events(since=t, decode=True, filters={'type': ['container','service']}):
             new_mappings = {}
-            if event.get(u'status') == u'start':
-                try:
-                    if TRAEFIK_VERSION == "1":
-                        add_to_mappings(new_mappings, check_container_t1(client.containers.get(event.get(u'id'))))
-                        if DOCKER_SWARM_MODE:
-                            add_to_mappings(new_mappings, check_service_t1(client.services.get(event.get(u'id'))))
-                    elif TRAEFIK_VERSION == "2":
-                        add_to_mappings(new_mappings, check_container_t2(client.containers.get(event.get(u'id'))))
-                        if DOCKER_SWARM_MODE:
-                            add_to_mappings(new_mappings, check_service_t2(client.services.get(event.get(u'id'))))
+            evt_type = event.get(u'Type')
+            evt_action = event.get(u'Action') or event.get(u'status')
 
-                except docker.errors.NotFound as e:
-                    forever=778
-                    pass
-
-            if DOCKER_SWARM_MODE:
-                if event.get(u'Action') == u'update':
+            if evt_type == u'container' and evt_action == u'start':
+                cont_id = event.get(u'id') or (event.get(u'Actor') or {}).get(u'ID')
+                if cont_id:
                     try:
                         if TRAEFIK_VERSION == "1":
-                            node_id = event.get(u'Actor').get(u'ID')
+                            add_to_mappings(new_mappings, check_container_t1(client.containers.get(cont_id)))
+                        elif TRAEFIK_VERSION == "2":
+                            add_to_mappings(new_mappings, check_container_t2(client.containers.get(cont_id)))
+                    except docker.errors.NotFound:
+                        forever=778
+                        pass
+                else:
+                    logger.debug("Skip container event without id: %s", event)
+
+            if DOCKER_SWARM_MODE and evt_type == u'service' and evt_action == u'update':
+                node_id = (event.get(u'Actor') or {}).get(u'ID')
+                if node_id:
+                    try:
+                        if TRAEFIK_VERSION == "1":
                             logger.debug("Detected Update on node: %s", node_id)
                             add_to_mappings(new_mappings, check_service_t1(node_id))
                         elif TRAEFIK_VERSION == "2":
-                            node_id = event.get(u'Actor').get(u'ID')
-                            service_id = client.services.list()
                             logger.debug("Detected Update on node: %s", node_id)
                             add_to_mappings(new_mappings, check_service_t2(node_id))
-
-                    except docker.errors.NotFound as e:
+                    except docker.errors.NotFound:
                         forever=778
                         pass
+                else:
+                    logger.debug("Skip service update event without Actor.ID: %s", event)
 
             sync_mappings(new_mappings, doms)
