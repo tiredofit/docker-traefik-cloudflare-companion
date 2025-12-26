@@ -557,40 +557,49 @@ t = datetime.now().strftime("%s")
 logger.debug("Time: %s", t)
 
 if ENABLE_DOCKER_POLL:
-    forever=0
-    while (forever < 777):
-        for event in client.events(since=t, filters={'Type': 'service', 'Action': u'update', 'status': u'start'}, decode=True):
-            new_mappings = {}
-            if event.get(u'status') == u'start':
-                try:
-                    if TRAEFIK_VERSION == "1":
-                        add_to_mappings(new_mappings, check_container_t1(client.containers.get(event.get(u'id'))))
-                        if DOCKER_SWARM_MODE:
-                            add_to_mappings(new_mappings, check_service_t1(client.services.get(event.get(u'id'))))
-                    elif TRAEFIK_VERSION == "2":
-                        add_to_mappings(new_mappings, check_container_t2(client.containers.get(event.get(u'id'))))
-                        if DOCKER_SWARM_MODE:
-                            add_to_mappings(new_mappings, check_service_t2(client.services.get(event.get(u'id'))))
+    # Build event filters based on mode
+    # For containers: listen for 'start' status
+    # For swarm services: listen for 'update' action
+    if DOCKER_SWARM_MODE:
+        event_filters = {'type': ['container', 'service']}
+    else:
+        event_filters = {'type': 'container', 'event': 'start'}
 
-                except docker.errors.NotFound as e:
-                    forever=778
-                    pass
+    for event in client.events(since=t, filters=event_filters, decode=True):
+        new_mappings = {}
+        event_type = event.get(u'Type')
+        event_status = event.get(u'status')
+        event_action = event.get(u'Action')
 
-            if DOCKER_SWARM_MODE:
-                if event.get(u'Action') == u'update':
-                    try:
-                        if TRAEFIK_VERSION == "1":
-                            node_id = event.get(u'Actor').get(u'ID')
-                            logger.debug("Detected Update on node: %s", node_id)
-                            add_to_mappings(new_mappings, check_service_t1(node_id))
-                        elif TRAEFIK_VERSION == "2":
-                            node_id = event.get(u'Actor').get(u'ID')
-                            service_id = client.services.list()
-                            logger.debug("Detected Update on node: %s", node_id)
-                            add_to_mappings(new_mappings, check_service_t2(node_id))
+        logger.debug("Received Docker event: Type=%s, status=%s, Action=%s, id=%s",
+                    event_type, event_status, event_action, event.get(u'id') or event.get(u'Actor', {}).get(u'ID'))
 
-                    except docker.errors.NotFound as e:
-                        forever=778
-                        pass
+        # Handle container start events
+        if event_type == u'container' and event_status == u'start':
+            try:
+                container_id = event.get(u'id')
+                logger.debug("Processing container start event for: %s", container_id)
+                if TRAEFIK_VERSION == "1":
+                    add_to_mappings(new_mappings, check_container_t1(client.containers.get(container_id)))
+                elif TRAEFIK_VERSION == "2":
+                    add_to_mappings(new_mappings, check_container_t2(client.containers.get(container_id)))
 
-            sync_mappings(new_mappings, doms)
+            except docker.errors.NotFound as e:
+                logger.debug("Container not found (may have been removed): %s", e)
+                pass
+
+        # Handle swarm service events
+        if DOCKER_SWARM_MODE and event_type == u'service' and event_action == u'update':
+            try:
+                service_id = event.get(u'Actor', {}).get(u'ID')
+                logger.debug("Detected Update on service: %s", service_id)
+                if TRAEFIK_VERSION == "1":
+                    add_to_mappings(new_mappings, check_service_t1(service_id))
+                elif TRAEFIK_VERSION == "2":
+                    add_to_mappings(new_mappings, check_service_t2(service_id))
+
+            except docker.errors.NotFound as e:
+                logger.debug("Service not found (may have been removed): %s", e)
+                pass
+
+        sync_mappings(new_mappings, doms)
