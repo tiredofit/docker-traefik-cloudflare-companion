@@ -6,6 +6,14 @@ PROCESS_NAME="traefik-cloudflare-companion"
 
 check_container_initialized
 check_service_initialized init
+
+# Delay service startup by specified seconds   
+RUN_DELAY="${RUN_DELAY:=0}"
+if [[ ${RUN_DELAY} -gt 0 ]]; then
+    print_info "Delaying service startup by ${RUN_DELAY} seconds"
+    sleep "${RUN_DELAY}"
+fi
+
 liftoff
 
 print_start "Starting Traefik Cloudflare Companion"

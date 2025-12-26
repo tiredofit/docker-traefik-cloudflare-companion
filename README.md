@@ -133,6 +133,7 @@ Be sure to view the following repositories to understand all the customizable op
 | `LOG_FILE`  | Log Filename                                                        | `tcc.log` |
 | `LOG_PATH`  | Log Path                                                            | `/logs/`  |
 | `TCC_USER`  | User to run application as (there is a user `tcc` that can be used) | `root`    |
+| `RUN_DELAY` | Delay service startup by specified seconds                          | `0`       |
 
 #### Docker Options
 
