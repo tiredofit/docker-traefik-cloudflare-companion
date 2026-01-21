@@ -348,8 +348,15 @@ def check_traefik(included_hosts, excluded_hosts):
     logger.debug("Called check_traefik")
     if TRAEFIK_VERSION == "2":
         r = requests.get("{}/api/http/routers".format(TRAEFIK_POLL_URL))
-        if r.ok:
-            for router in r.json():
+        if r.status_code != 200:
+            logger.error("Traefik API returned error %s: %s", r.status_code, r.text)
+            return mappings
+        try:
+            routers = r.json()
+        except requests.exceptions.JSONDecodeError:
+            logger.error("Failed to decode JSON from Traefik. Response: %s", r.text)
+            return mappings
+        for router in routers:
                 if "status" in router and router["status"] == "enabled":
                     if "name" in router and "rule" in router:
                         name = router["name"]
