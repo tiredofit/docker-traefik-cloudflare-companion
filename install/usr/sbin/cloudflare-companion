@@ -203,7 +203,7 @@ def point_domain(name, domain_infos):
                         else:
                             logger.info("Existing record: %s already points to %s", name, domain_info['target_domain'])
             except CloudflareAPIError as ex:
-                logger.error('** %s - %d %s' % (name, ex, ex))
+                logger.error(f"** {name} - {ex}")
                 ok = False
                 pass
     return ok
