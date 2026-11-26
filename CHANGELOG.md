@@ -1,3 +1,10 @@
+## 7.4.999 2026-11-26 <dave at tiredofit dot ca>
+
+   ### Changed
+      - END OF LIFE release - This image is no longer maintained and will receive no further updates, not even security fixes
+      - Please migrate to the supported successor [Herald](https://github.com/nfrastack/herald) (`nfrastack/herald`)
+
+
 ## 7.4.0 2025-04-30 <GuyKh@github>
 
    ### Added
@@ -222,18 +229,18 @@ This release changes some environment variable names to more explicit variables 
 
    ### Fixed
       - Regex parsing for domains with hyphens
- 
+
 
 ## 6.5.0 2021-02-22 <jackkellog@github>
 
    ### Added
-      - Ability to exclude subdomains 
+      - Ability to exclude subdomains
       - Added verbose logging level for cloudflare
 
 ## 6.4.0 2021-01-14 <dave at tiredofit dot ca>
 
    ### Changed
-      - Alpine 3.13 Base         
+      - Alpine 3.13 Base
 
 
 ## 6.3.2 2020-11-03 <james9909@github>
@@ -269,7 +276,7 @@ This release changes some environment variable names to more explicit variables 
 
    ### Added
       - Ability to set a custom target domain per entry, or simply rely on default
-   
+
    ### Changed
       - Allow lowercase docker secrets
       - Changed logging to use pythons internal logging mechanism

@@ -1,9 +1,34 @@
 # github.com/tiredofit/docker-traefik-cloudflare-companion
 
+> [!CAUTION]
+> **END OF LIFE** - This image is no longer maintained and will receive no further updates, not even security fixes.
+> Please migrate to the supported successor **[Herald](https://github.com/nfrastack/herald)** (`nfrastack/herald`).
+> Release `7.4.999` / `:latest` only adds a startup End of Life notice pointing at Herald.
+
+## End of Life - Migrate to Herald
+
+This image (`tiredofit/traefik-cloudflare-companion`, final version `7.4.999`) is **End of Life**. The Docker Hub repository has been removed; the final images remain available on the GitHub Container Registry only so existing setups keep running while you migrate. There will be no further releases.
+
+### The successor: [Herald](https://github.com/nfrastack/herald) (`nfrastack/herald`)
+
+Herald is the supported replacement, also maintained by `tiredofit` under the `nfrastack` org. It does the same job - watching your infrastructure and keeping DNS records up to date - and a lot more:
+
+- **Same Traefik workflows**: Herald auto-detects `traefik.http.routers.*.rule=Host(...)` labels on your containers just like this image did, and can also poll the Traefik API directly.
+- **Cloudflare and beyond**: Cloudflare is a supported output provider, alongside many other DNS providers (Route53, DigitalOcean, Hetzner, GoDaddy, Porkbun, PowerDNS, RFC2136, and more) plus file exports (hosts, JSON, YAML, zone files).
+- **More sources**: in addition to Docker and Traefik, Herald can discover names from Caddy, Tailscale, ZeroTier, and static files.
+- **Modern configuration**: domain-centric YAML config (with environment variable support) instead of dozens of `DOMAINn_*` variables.
+
+### Getting started with Herald
+
+- Image: `docker.io/nfrastack/herald` (see [container/](https://github.com/nfrastack/herald/tree/main/container) in the Herald repo for image docs)
+- Full docs and compose examples: [github.com/nfrastack/herald](https://github.com/nfrastack/herald) - check `contrib/compose/compose.yml` and `contrib/config/herald.yml.example`
+- If you only need "Traefik Host rule -> Cloudflare CNAME", a minimal Herald setup is one input (`docker` and/or `traefik`), one output (`cloudflare`), and one `domains:` entry wiring them together.
+
+<details>
+<summary>Legacy documentation for existing installations (click to expand) - this image is End of Life, see above</summary>
+
 [![GitHub release](https://img.shields.io/github/v/tag/tiredofit/docker-traefik-cloudflare-companion?style=flat-square)](https://github.com/tiredofit/docker-traefik-cloudflare-companion/releases/latest)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/tiredofit/docker-traefik-cloudflare-companionmain.yml?branch=main&style=flat-square)](https://github.com/tiredofit/docker-traefik-cloudflare-companion.git/actions)
-[![Docker Stars](https://img.shields.io/docker/stars/tiredofit/traefik-cloudflare-companion.svg?style=flat-square&logo=docker)](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion/)
-[![Docker Pulls](https://img.shields.io/docker/pulls/tiredofit/traefik-cloudflare-companion.svg?style=flat-square&logo=docker)](https://hub.docker.com/r/tiredofit/traefik-cloudflare-companion/)
 [![Become a sponsor](https://img.shields.io/badge/sponsor-tiredofit-181717.svg?logo=github&style=flat-square)](https://github.com/sponsors/tiredofit)
 [![Paypal Donate](https://img.shields.io/badge/donate-paypal-00457c.svg?logo=paypal&style=flat-square)](https://www.paypal.me/tiredofit)
 
@@ -297,3 +322,5 @@ MIT. See [LICENSE](LICENSE) for more details.
 * https://www.cloudflare.com
 * https://github.com/tiredofit/docker-traefik-cloudflare-companion
 * https://github.com/code5-lab/dns-flare
+
+</details>

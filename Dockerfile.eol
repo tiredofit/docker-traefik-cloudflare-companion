@@ -1,0 +1,17 @@
+ARG SRC_IMAGE=ghcr.io/tiredofit/docker-traefik-cloudflare-companion:latest
+
+FROM ${SRC_IMAGE}
+
+LABEL maintainer="Dave Conroy (github.com/tiredofit)" \
+      org.opencontainers.image.title="traefik-cloudflare-companion (EOL)" \
+      org.opencontainers.image.description="END OF LIFE - Migrate to github.com/nfrastack/herald (nfrastack/herald)"
+
+COPY eol/tiredofit_docker-traefik-cloudflare-companion.md /tmp/eol-changelog-head.md
+COPY eol/09-eol-notice /etc/cont-init.d/09-eol-notice
+
+RUN cat /tmp/eol-changelog-head.md \
+        /assets/.changelogs/tiredofit_docker-traefik-cloudflare-companion.md \
+        > /tmp/combined.md && \
+    mv /tmp/combined.md /assets/.changelogs/tiredofit_docker-traefik-cloudflare-companion.md && \
+    rm /tmp/eol-changelog-head.md && \
+    chmod +x /etc/cont-init.d/09-eol-notice

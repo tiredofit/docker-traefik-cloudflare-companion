@@ -1,0 +1,23 @@
+#!/command/with-contenv bash
+
+source /assets/functions/00-container
+PROCESS_NAME="eol-notice"
+
+echo "**********************************************************************************"
+echo "****                                                                          ****"
+echo "****   END OF LIFE NOTICE  NOVEMBER 26, 2026                                  ****"
+echo "****                                                                          ****"
+echo "****   tiredofit/traefik-cloudflare-companion is END OF LIFE (v7.4.999).      ****"
+echo "****   This image will receive no further updates nor security fixes.         ****"
+echo "****                                                                          ****"
+echo "****   Please migrate to Herald, the supported successor:                     ****"
+echo "****     Repo:  https://github.com/nfrastack/herald                           ****"
+echo "****     Image: docker.io/nfrastack/herald                                    ****"
+echo "****                                                                          ****"
+echo "****   This container will continue to run for now, but you should migrate    ****"
+echo "****   as soon as possible.                                                   ****"
+echo "****                                                                          ****"
+echo "**********************************************************************************"
+
+sleep 30
+liftoff
